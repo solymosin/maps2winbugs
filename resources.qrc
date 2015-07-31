@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/map2WinBUGS">
+        <file>images/icon01.png</file>
+    </qresource>
+</RCC>
