@@ -10,7 +10,8 @@
 name=map2WinBUGS
 qgisMinimumVersion=2.0
 description=a tool to facilitate data processing for Bayesian spatial modeling
-version=2.2
+about=Bayesian methods for spatial modeling and analysis are being increasingly used in different research fields (e.g. ecology, epidemiology, social science). In Bayesian spatial modeling, perhaps the most widely used tool is GeoBUGS, which is included in WinBUGS and OpenBUGS. These applications are very flexible and user-friendly for modeling in a Bayesian framework. In spatial statistics, a primary source of data is the map to which attribute data may be linked. In GeoBUGS, vector digital maps are used. In most cases, these types of maps are developed in a geographic information system (GIS). The different GISs use map protocols for handling vector (or pixel) graphical maps. These map formats are convertible with each other. GeoBUGS cannot read the formats that most GISs support, but can read special formats (ArcInfo, S-Plus, and EpiMap) to describe the spatial structure of vector graphical maps. The user must convert any vector digital map to one of these formats before using GeoBUGS. This conversion can be done many ways, and may be facilitated by specialized tools. The aim of the development of maps2WinBUGS was to produce an open source, free, and relatively easy-to-use tool with functions for the preparation of maps and tabular data for spatial modeling with GeoBUGS.
+version=2.21
 author=Norbert Solymosi
 email=solymosi.norbert@gmail.com
 
@@ -24,9 +25,9 @@ email=solymosi.norbert@gmail.com
 # Tags are comma separated with spaces allowed
 tags=
 
-homepage=https://github.com/solymosin/maps2winbugs
-tracker=
-repository=
+homepage=http://purl.org/sp/maps2winbugs
+tracker=https://github.com/solymosin/maps2winbugs/issues
+repository=https://github.com/solymosin/maps2winbugs
 category=Plugins
 icon=icon.png
 # experimental flag
