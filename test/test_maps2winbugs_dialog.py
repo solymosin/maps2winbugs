@@ -16,18 +16,18 @@ import unittest
 
 from PyQt4.QtGui import QDialogButtonBox, QDialog
 
-from maps2winbugs_dialog import map2WinBUGSDialog
+from maps2winbugs_dialog import maps2WinBUGSDialog
 
 from utilities import get_qgis_app
 QGIS_APP = get_qgis_app()
 
 
-class map2WinBUGSDialogTest(unittest.TestCase):
+class maps2WinBUGSDialogTest(unittest.TestCase):
     """Test dialog works."""
 
     def setUp(self):
         """Runs before each test."""
-        self.dialog = map2WinBUGSDialog(None)
+        self.dialog = maps2WinBUGSDialog(None)
 
     def tearDown(self):
         """Runs after each test."""
@@ -49,7 +49,7 @@ class map2WinBUGSDialogTest(unittest.TestCase):
         self.assertEqual(result, QDialog.Rejected)
 
 if __name__ == "__main__":
-    suite = unittest.makeSuite(map2WinBUGSDialogTest)
+    suite = unittest.makeSuite(maps2WinBUGSDialogTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
 

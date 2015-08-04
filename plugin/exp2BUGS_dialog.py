@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'exp2BUGS_dialog_base.ui'
 #
-# Created: Fri Jul 31 18:59:57 2015
+# Created: Sat Aug  1 07:14:52 2015
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!

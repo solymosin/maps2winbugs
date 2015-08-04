@@ -38,5 +38,21 @@ class Dialog(QDialog, Ui_editor_dialog):
         QDialog.__init__(self)                               
                         
         self.setupUi(self)
-              
+        
+        self.pushCancel.clicked.connect(self.close)
+        self.pushSave.clicked.connect(self.save)
+        
+    def save(self):
+        fileName = QFileDialog.getSaveFileName(self, caption='Save As...')
+        try:
+            file = QFile(fileName + '.txt')
+            file.open( QIODevice.WriteOnly | QIODevice.Text )
+            out = QTextStream(file)
+            out << self.plainTextEdit.toPlainText()
+            out.flush()
+            file.close()
+            self.close()
+            return True
+        except IOError:
+            return False
 

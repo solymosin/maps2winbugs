@@ -5,11 +5,11 @@
                                  A QGIS plugin
  a tool to facilitate data processing for
 Bayesian spatial modeling
-                             -------------------
+                              -------------------
         begin                : 2015-07-31
+        git sha              : $Format:%H$
         copyright            : (C) 2015 by Norbert Solymosi
         email                : solymosi.norbert@gmail.com
-        git sha              : $Format:%H$
  ***************************************************************************/
 
 /***************************************************************************
@@ -20,17 +20,26 @@ Bayesian spatial modeling
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
- This script initializes the plugin, making it known to QGIS.
 """
 
+from PyQt4.QtCore import SIGNAL, Qt, QFile, QIODevice, QTextStream, QObject, QModelIndex
+from PyQt4.QtGui import QDialog, QProgressDialog, QFileDialog, QMessageBox, QApplication, QTextCursor, QStandardItemModel, QAbstractItemView, QItemSelectionModel
+from qgis.core import QGis, QgsVectorLayer, QgsFeature, QgsGeometry, QgsVectorDataProvider, QgsFields, QgsField, QgsFeatureRequest, QgsPoint
 
-# noinspection PyPep8Naming
-def classFactory(iface):  # pylint: disable=invalid-name
-    """Load maps2WinBUGS class from file maps2WinBUGS.
+from xdist_dialog import Ui_xDist
 
-    :param iface: A QGIS interface instance.
-    :type iface: QgsInterface
-    """
-    #
-    from .maps2winbugs import maps2WinBUGS
-    return maps2WinBUGS(iface)
+
+class Dialog(QDialog, Ui_xDist):         
+    def __init__(self):
+        """Constructor for the dialog.
+        
+        """
+        
+        QDialog.__init__(self)                               
+                        
+        self.setupUi(self)
+        
+        self.pushCancel.clicked.connect(self.reject)
+        self.pushOK.clicked.connect(self.accept)    
+
+

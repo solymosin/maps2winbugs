@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- map2WinBUGS
+ maps2WinBUGS
                                  A QGIS plugin
  a tool to facilitate data processing for
 Bayesian spatial modeling

@@ -18,7 +18,7 @@ from PyQt4.QtGui import QIcon
 
 
 
-class map2WinBUGSDialogTest(unittest.TestCase):
+class maps2WinBUGSDialogTest(unittest.TestCase):
     """Test rerources work."""
 
     def setUp(self):
@@ -31,12 +31,12 @@ class map2WinBUGSDialogTest(unittest.TestCase):
 
     def test_icon_png(self):
         """Test we can click OK."""
-        path = ':/plugins/map2WinBUGS/icon.png'
+        path = ':/plugins/maps2WinBUGS/icon.png'
         icon = QIcon(path)
         self.assertFalse(icon.isNull())
 
 if __name__ == "__main__":
-    suite = unittest.makeSuite(map2WinBUGSResourcesTest)
+    suite = unittest.makeSuite(maps2WinBUGSResourcesTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
 

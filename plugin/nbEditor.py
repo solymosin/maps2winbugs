@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- map2WinBUGS
+ maps2WinBUGS
                                  A QGIS plugin
  a tool to facilitate data processing for
 Bayesian spatial modeling
@@ -22,16 +22,17 @@ Bayesian spatial modeling
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import SIGNAL, Qt, QFile, QIODevice, QTextStream
-from PyQt4.QtGui import QDialog, QProgressDialog, QFileDialog, QMessageBox, QApplication, QTextCursor
-from qgis.core import QGis, QgsVectorLayer, QgsFeature, QgsGeometry, QgsVectorDataProvider, QgsFields, QgsField, QgsFeatureRequest, QgsPoint
+from PyQt4.QtCore import SIGNAL, Qt, QFile, QIODevice, QTextStream, QObject, QModelIndex
+from PyQt4.QtGui import QDialog, QProgressDialog, QFileDialog, QMessageBox, QApplication, QTextCursor, QStandardItemModel, QAbstractItemView, QItemSelectionModel
+from qgis.core import QGis, QgsVectorLayer, QgsFeature, QgsGeometry, QgsVectorDataProvider, QgsFields, QgsField, QgsFeatureRequest, QgsPoint, QgsVectorLayerCache
+from qgis.gui import QgsMapCanvas, QgsRubberBand
 
-from exp2BUGS_dialog import Ui_exp2BUGS_dialog
+from nbEditor_dialog import Ui_nbEditor_dialog
+import editor
+import xdist
 
-
-
-class Dialog(QDialog, Ui_exp2BUGS_dialog):         
-    def __init__(self, iface, ml):
+class Dialog(QDialog, Ui_nbEditor_dialog):         
+    def __init__(self, iface, ml, mc):
         """Constructor for the dialog.
         
         Args:
@@ -42,262 +43,312 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
                         
         self.setupUi(self)
         
-        self.ml = ml        
-        self.polynum = 0
-        self.deccount = 0
-        self.dh = 0
-        self.intlen = 0
-        self.kicsi = 0
-        self.mind = 0
-        self.minull = 1000
+        self.ml = ml     
+        self.mCanvas = mc  
+        self.p = 1 
+        
+        self.mRubberBand = QgsRubberBand(self.mCanvas, True)
+        self.mRubberBand.reset(QGis.Polygon)
+        self.mRubberBand.setColor(Qt.red)
+        self.mRubberBand.setWidth(2)        
+        
+        self.model = QStandardItemModel(0,1)
+        self.tableView.setModel(self.model)
+        self.model.setHeaderData(0, Qt.Horizontal, 'Neighbouring IDs')
+        self.tableView.setSelectionMode(QAbstractItemView.SingleSelection)
+        
+        self.selectionModel = QItemSelectionModel(self.model)
+        self.tableView.setSelectionModel(self.selectionModel)
+        self.tableView.horizontalHeader().setStretchLastSection(True)
+        
+        self.pushCancel.clicked.connect(self.close)
+        self.pushOK.clicked.connect(self.convert)
+        self.comboBox.addItems(['','Intersections','Touches','Within distance']) 
+        
+        self.comboBox.currentIndexChanged.connect(self.nbMethod) 
+        self.tableView.selectionModel().selectionChanged.connect(self.tab2map)
+        self.ml.selectionChanged.connect(self.map2tab)
         
         
-        self.pushButton.clicked.connect(self.save)
-        self.pushButton_2.clicked.connect(self.close)
+    def map2tab(self):
+        s = ''
+        idx = self.tableView.selectionModel().selectedIndexes()[0]
+        ts = self.model.itemData(idx)
         
-        self.comboBox.addItems(['','ArcInfo','S-Plus']) 
+        for fid in sorted(self.ml.selectedFeaturesIds()):
+            s += '%s,' % str(int(fid)+self.p)                   
+
+        s = s[:-1]
         
-        self.comboBox.currentIndexChanged.connect(self.formatSelect)                    
+        if s!=ts:
+            self.model.setData(idx, s)
         
-    def control(self):
-        self.polynum = self.ml.featureCount()        
+        #self.setWindowTitle(s)
+        
+                
+    def nbWithinDist(self):
+        dlg = xdist.Dialog()
+        dlg.setModal(True)
+        dlg.setWindowTitle("Between two objects")
+                
+        if dlg.exec_() == QDialog.Accepted:
+            lDist = float(dlg.lineEdit.text())
+            if lDist==0:
+                return
+            
+            feat = QgsFeature()
+            provider = self.ml.dataProvider()
+            e = provider.featureCount()        
+                    
+            feats = provider.getFeatures()
+            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+            self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
+            
+            feats.nextFeature(feat)
+            if feat.id()==1:
+                e += 1
+                self.p = 0
+                
+            prgDialog = QProgressDialog(self)
+            prgDialog.setRange(0, e)
+            prgDialog.setWindowTitle('Neigbouring')   
+                
+            feats = provider.getFeatures()   
+            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+            self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
+            ne = 0                
+            while feats.nextFeature(feat):
+                ne += 1
+                self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
+                geom = QgsGeometry(feat.geometry())      
+                neighbours = self.hdist(geom, lDist)
+                row = self.model.rowCount(QModelIndex())
+                self.model.insertRows(row, 1, QModelIndex())
+                self.model.setData(self.model.index(row, 0, QModelIndex()), neighbours)
+         
+                prgDialog.setValue(ne)
+                prgDialog.setLabelText(self.tr("Neighboured feature count %s of %s..." % (ne, e)))
+            
+                if prgDialog.wasCanceled():
+                    prgDialog.close()
+                    self.close()
+                    break
+                    
+                QApplication.processEvents()                
+            
+            
+    def hdist(self, geoma, lDist):
         feat = QgsFeature()
         provider = self.ml.dataProvider()
         feats = provider.getFeatures()
         self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, self.polynum)) 
-        ne = 0                
+        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
+        ne = 0              
+        neighbours = ""
         while feats.nextFeature(feat):
             ne += 1
-            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)           
-            geom = QgsGeometry(feat.geometry())      
-            if geom.isMultipart():
-                multi_polygon = geom.asMultiPolygon()
-                for polygon in multi_polygon:                    
-                    for ring in polygon:
-                        for v in ring:
-                            self.cintlen(str(v.x()))
-                            self.cintlen(str(v.y()))
-            else:
-                polygon = geom.asPolygon()                
-                for ring in polygon:
-                    for v in ring:
-                        self.cintlen(str(v.x()))
-                        self.cintlen(str(v.y()))               
-        
-        
-        
-    def cintlen(self, num):
-        nulls = 0
-        darab = num.partition('.')
-        if len(darab)>2:
-            hossz = len(darab[0])
-            sdec = darab[2]
-            if float(sdec)<0.1:
-                self.kicsi +=1
-            h = len(sdec)+1
-            for x in range(1, h): 
-                if float(sdec[-x:])==0:
-                    nulls = x
-            if nulls<self.minull:
-                self.minull=nulls
-            if hossz>self.intlen:
-                self.intlen=hossz 
-            self.mind +=1           
-        #float(s.partition('.')[2][-1:])==0
-        
-    def formatSelect(self):
+            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
+            geomb = QgsGeometry(feat.geometry())
+            if geoma.distance(geomb)<=lDist:
+                neighbours = neighbours + '%s,' % (self.p+feat.id())
+        return neighbours[:-1]            
+    
+    
+    def tab2map(self):        
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        self.control()
-        QApplication.restoreOverrideCursor()
         
-        dh = 0
-        prec = (11-self.intlen)-self.minull
-        scale = 0
+        self.ml.selectionChanged.disconnect(self.map2tab)
         
-        if (float(self.kicsi)/float(self.mind))>0.7:
-            prec = 0
+        idx = self.tableView.selectionModel().selectedIndexes()[0]
+        featureId = idx.row() + self.p
         
-        if self.comboBox.currentText()=='':
-            return
-        elif self.comboBox.currentText()=='ArcInfo':
-            self.convArcInfo(prec)
-        elif self.comboBox.currentText()=='S-Plus':
-            self.convSplus(prec)
+        s = self.model.itemData(idx)
+        lst = s[0].strip().replace(' ', '').split(',')
         
-        self.plainTextEdit.moveCursor(QTextCursor.Start, QTextCursor.MoveAnchor)
+        self.ml.removeSelection()
         
-        if prec<=3:
-            scale = pow(10,(prec-1))
-        if prec>=4:
-            scale = pow(10,4)
-        if (float(self.kicsi)/float(self.mind))>0.7:
-            scale = pow(10,0)
-        
-        self.plainTextEdit.insertPlainText('map:%s\n\nXscale:%s\nYscale:%s\n\n' % (self.polynum, scale, scale))
+        for sid in lst:
+            self.ml.select(int(sid)-self.p)
               
-
-    def save(self):
-        fileName = QFileDialog.getSaveFileName(self, caption='Save As...')
-        try:
-            file = QFile(fileName + '.txt')
-            file.open( QIODevice.WriteOnly | QIODevice.Text )
-            out = QTextStream(file)
-            out << self.plainTextEdit.toPlainText()
-            out.flush()
-            file.close()
-            self.close()
-            return True
-        except IOError:
-            return False
-
-  
-
-    def convArcInfo(self, prec):                                               
-        prgDialog = QProgressDialog(self)
-        prgDialog.setRange(0, self.polynum)
-        prgDialog.setWindowTitle('Converting')            
+        provider = self.ml.dataProvider()        
         
-        for i in range(0, self.polynum):
-            j = i+1
-            self.plainTextEdit.appendPlainText("%s area%s" % (j,j))
-#             
-        self.plainTextEdit.appendPlainText("\nregions")  
-        
-        provider = self.ml.dataProvider()
         feat = QgsFeature()
-        i = 1
-        n = 1        
-        ne = 0
-        feats = provider.getFeatures()        
-        self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, self.polynum))        
-        while feats.nextFeature(feat):            
-             ne += 1
-             self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)           
-             geom = QgsGeometry(feat.geometry())                     
-             if geom.isMultipart():                
-                 multi_polygon = geom.asMultiPolygon()
-                 for polygon in multi_polygon:
-                     for ring in polygon:
-                         self.plainTextEdit.appendPlainText("%s area%s" % (n,i))
-                         n = n+1                        
-             else:
-                 polygon = geom.asPolygon()                
-                 for ring in polygon:
-                     self.plainTextEdit.appendPlainText("%s area%s" % (n,i))
-                     n = n+1
-             i = i+1
-              
-        self.plainTextEdit.appendPlainText("END")
+        layer = QgsVectorLayerCache(self.ml, provider.featureCount())
+        layer.featureAtId(idx.row(),feat)
+        geom = QgsGeometry(feat.geometry())   
         
+        self.mRubberBand.setToGeometry(geom, self.ml)
+        self.mRubberBand.show()
+        
+        self.ml.selectionChanged.connect(self.map2tab)
+        
+        QApplication.restoreOverrideCursor()        
+        
+        
+    def closeEvent(self,event):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        self.mRubberBand.hide()
+        self.ml.removeSelection()
+        self.close()
+        QApplication.restoreOverrideCursor()  
+        
+        
+    def convert(self):
+        dlg = editor.Dialog()
+        dlg.setModal(True)
+        dlg.setWindowTitle("Neighbour list in BUGS format")
+        num = ""
+        adj = ""
+        sumNumNeigh = 0
+        for row in range(0, self.model.rowCount()):
+            ts = self.model.itemData(self.model.index(row, 0))
+            lst = ts[0].strip().replace(' ', '').split(',')
+            num += '%s, ' % len(lst)
+            sumNumNeigh += len(lst)
+            lst.reverse()
+            sor = ', '.join(lst) + ','
+            adj = adj + str(sor) + '\n' 
+        
+        num = num[:-2]
+        adj = adj[:-2]
+        
+        nblist = 'list(\nnum = c(%s),\nadj = c(%s),\nsumNumNeigh=%s)' % (num, adj, sumNumNeigh)
+        dlg.plainTextEdit.appendPlainText(nblist)
+        
+        dlg.exec_()                
+
+
+    def nbMethod(self):
+        self.model.removeRows(0, self.model.rowCount(QModelIndex()), QModelIndex())
+
+        if self.comboBox.currentText()=="Touches":            
+            if self.ml.geometryType()==0:
+                return
+            else:
+                self.nbTouches()
+        if self.comboBox.currentText()=="Intersections":
+            if self.ml.geometryType()==0:
+                return
+            else:
+                self.nbIntersects()
+        if self.comboBox.currentText()=="Within distance":
+            self.nbWithinDist()
+
+            
+    def nbTouches(self):                                
+        feat = QgsFeature()
+        provider = self.ml.dataProvider()
+        e = provider.featureCount()        
+                
         feats = provider.getFeatures()
-        nu = 1
-        n = 1     
         self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, self.polynum)) 
+        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
+        
+        feats.nextFeature(feat)
+        if feat.id()==1:
+            e += 1
+            self.p = 0
+            
+        prgDialog = QProgressDialog(self)
+        prgDialog.setRange(0, e)
+        prgDialog.setWindowTitle('Neigbouring')   
+            
+        feats = provider.getFeatures()   
+        self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
         ne = 0                
         while feats.nextFeature(feat):
-            pn = 1
             ne += 1
-            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)           
+            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
             geom = QgsGeometry(feat.geometry())      
-            if geom.isMultipart():
-                multi_polygon = geom.asMultiPolygon()
-                for polygon in multi_polygon:                    
-                    for ring in polygon:
-                        self.plainTextEdit.appendPlainText("%s 0 0" % (n))
-                        for v in ring:
-                            self.plainTextEdit.appendPlainText("%s %s" % (round(v.x(),prec), round(v.y(),prec)))
-                            pn += 1                        
-                        self.plainTextEdit.appendPlainText("END")
-                        n += 1                        
-            else:
-                polygon = geom.asPolygon()                
-                for ring in polygon:
-                    self.plainTextEdit.appendPlainText("%s 0 0" % (n))
-                    for v in ring:
-                        self.plainTextEdit.appendPlainText("%s %s" % (round(v.x(),prec), round(v.y(),prec)))
-                        pn += 1
-                    self.plainTextEdit.appendPlainText("END")
-                    n += 1        
-        
-            if pn>=10000:
-                QMessageBox.information(self, 
-                                        "Too many points", 
-                                        "Polygon No. %s contains to many points to read into GeoBUGS.\nSimplifying of polygon can solve this problem." % (nu), 
-                                        buttons=QMessageBox.Ok, defaultButton=QMessageBox.NoButton)
-
-            prgDialog.setValue(nu)
-            prgDialog.setLabelText(self.tr("Converted feature number %s of %s..." % (nu, self.polynum)))
+            neighbours = self.htouch(geom)
+            row = self.model.rowCount(QModelIndex())
+            self.model.insertRows(row, 1, QModelIndex())
+            self.model.setData(self.model.index(row, 0, QModelIndex()), neighbours)
+     
+            prgDialog.setValue(ne)
+            prgDialog.setLabelText(self.tr("Neighboured feature count %s of %s..." % (ne, e)))
         
             if prgDialog.wasCanceled():
                 prgDialog.close()
                 self.close()
                 break
                 
-            QApplication.processEvents()
-        
-            nu += 1
-            
-        self.plainTextEdit.appendPlainText("END")
+            QApplication.processEvents()                
 
-
-    def convSplus(self, prec):                                               
-        prgDialog = QProgressDialog(self)
-        prgDialog.setRange(0, self.polynum)
-        prgDialog.setWindowTitle('Converting')            
-        
-        for i in range(0, self.polynum):
-            j = i+1
-            self.plainTextEdit.appendPlainText("%s area%s" % (j,j))
-#             
-        self.plainTextEdit.appendPlainText("")  
-        provider = self.ml.dataProvider()
+         
+    def htouch(self, geoma):
         feat = QgsFeature()
-        feats = provider.getFeatures()  
+        provider = self.ml.dataProvider()
+        feats = provider.getFeatures()
         self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, self.polynum)) 
-        ne = 0
-        nu = 1                
+        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
+        ne = 0              
+        neighbours = ""
         while feats.nextFeature(feat):
-            pn = 1
             ne += 1
-            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)           
-            geom = QgsGeometry(feat.geometry())      
-            if geom.isMultipart():
-                multi_polygon = geom.asMultiPolygon()
-                for polygon in multi_polygon:                    
-                    for ring in polygon:
-                        for v in ring:
-                            self.plainTextEdit.appendPlainText("area%s %s %s" % (nu, round(v.x(),prec), round(v.y(),prec)))
-                            pn += 1                        
-                        self.plainTextEdit.appendPlainText("NA NA NA")                     
-            else:
-                polygon = geom.asPolygon()                
-                for ring in polygon:
-                    for v in ring:
-                        self.plainTextEdit.appendPlainText("area%s %s %s" % (nu, round(v.x(),prec), round(v.y(),prec)))
-                        pn += 1
-                    self.plainTextEdit.appendPlainText("NA NA NA")
-        
-            if pn>=10000:
-                QMessageBox.information(self, 
-                                        "Too many points", 
-                                        "Polygon No. %s contains to many points to read into GeoBUGS.\nSimplifying of polygon can solve this problem." % (nu), 
-                                        buttons=QMessageBox.Ok, defaultButton=QMessageBox.NoButton)
+            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
+            geomb = QgsGeometry(feat.geometry())
+            if geoma.touches(geomb)==True:
+                neighbours = neighbours + '%s,' % (self.p+feat.id())
+        return neighbours[:-1]
 
-            prgDialog.setValue(nu)
-            prgDialog.setLabelText(self.tr("Converted feature number %s of %s..." % (nu, self.polynum)))
+    
+    def nbIntersects(self):                                
+        feat = QgsFeature()
+        provider = self.ml.dataProvider()
+        e = provider.featureCount()
+                
+        feats = provider.getFeatures()
+        self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
+        
+        feats.nextFeature(feat)
+        if feat.id()==1:
+            e += 1
+            self.p = 0
+            
+        prgDialog = QProgressDialog(self)
+        prgDialog.setRange(0, e)
+        prgDialog.setWindowTitle('Neigbouring')   
+            
+        feats = provider.getFeatures()   
+        self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
+        ne = 0                
+        while feats.nextFeature(feat):
+            ne += 1
+            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
+            geom = QgsGeometry(feat.geometry())      
+            neighbours = self.hintersect(geom)
+            row = self.model.rowCount(QModelIndex())
+            self.model.insertRows(row, 1, QModelIndex())
+            self.model.setData(self.model.index(row, 0, QModelIndex()), neighbours)
+     
+            prgDialog.setValue(ne)
+            prgDialog.setLabelText(self.tr("Neighboured feature count %s of %s..." % (ne, e)))
         
             if prgDialog.wasCanceled():
                 prgDialog.close()
                 self.close()
                 break
                 
-            QApplication.processEvents()
-        
-            nu += 1
-            
-        self.plainTextEdit.appendPlainText("END")
-                
+            QApplication.processEvents()                
+
+         
+    def hintersect(self, geoma):
+        feat = QgsFeature()
+        provider = self.ml.dataProvider()
+        feats = provider.getFeatures()
+        self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
+        ne = 0              
+        neighbours = ""
+        while feats.nextFeature(feat):
+            ne += 1
+            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
+            geomb = QgsGeometry(feat.geometry())
+            if geoma.intersects(geomb)==True:
+                neighbours = neighbours + '%s,' % (self.p+feat.id())
+        return neighbours[:-1]
+    

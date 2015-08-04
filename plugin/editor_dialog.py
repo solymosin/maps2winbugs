@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'editor_dialog_base.ui'
 #
-# Created: Sat Aug  1 22:28:22 2015
+# Created: Mon Aug  3 22:01:32 2015
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -43,6 +43,6 @@ class Ui_editor_dialog(object):
 
     def retranslateUi(self, editor_dialog):
         editor_dialog.setWindowTitle(QtGui.QApplication.translate("editor_dialog", "Dialog", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushCancel.setText(QtGui.QApplication.translate("editor_dialog", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
+        self.pushCancel.setText(QtGui.QApplication.translate("editor_dialog", "Close", None, QtGui.QApplication.UnicodeUTF8))
         self.pushSave.setText(QtGui.QApplication.translate("editor_dialog", "Save", None, QtGui.QApplication.UnicodeUTF8))
 

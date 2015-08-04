@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- map2WinBUGS
+ maps2WinBUGS
                                  A QGIS plugin
  a tool to facilitate data processing for
 Bayesian spatial modeling
@@ -28,11 +28,12 @@ from qgis.gui import *
 from qgis.core import QgsMapLayerRegistry
 
 from plugin import exp2BUGS
+from plugin import nbEditor
 
 import resources_rc
 import os.path
 
-class map2WinBUGS:
+class maps2WinBUGS:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
@@ -45,6 +46,7 @@ class map2WinBUGS:
         """
         # Save reference to the QGIS interface
         self.iface = iface
+        self.mCanvas = self.iface.mapCanvas()
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
@@ -82,7 +84,7 @@ class map2WinBUGS:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         self.actBUGS = QAction(
-            QIcon(':/plugins/map2WinBUGS/images/icon01.png'),
+            QIcon(':/plugins/maps2WinBUGS/images/icon01.png'),
             QCoreApplication.translate(
                 'maps2winbugs',
                 'Export to GeoBUGS'),
@@ -90,6 +92,15 @@ class map2WinBUGS:
         self.iface.addPluginToMenu('&maps2WinBUGS', self.actBUGS)
         self.actBUGS.triggered.connect(self.exp2GeoBUGS)
         
+        self.actNEIGH = QAction(
+            QIcon(':/plugins/maps2WinBUGS/images/icon02.png'),
+            QCoreApplication.translate(
+                'maps2winbugs',
+                'Neighbouring'),
+            self.iface.mainWindow())
+        self.iface.addPluginToMenu('&maps2WinBUGS', self.actNEIGH)
+        self.actNEIGH.triggered.connect(self.Neighbouring)    
+            
 
         self.toolbar = self.iface.addToolBar(
             QCoreApplication.translate('maps2winbugs',
@@ -98,13 +109,25 @@ class map2WinBUGS:
             QCoreApplication.translate('maps2winbugs',
                                        'maps2WinBUGS'))
 
-#         self.toolbar.addAction(self.actBUGS)
+        self.toolbar.addAction(self.actNEIGH)
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         self.iface.removePluginMenu('&maps2WinBUGS', self.actBUGS)
         del self.toolbar
 
+    def Neighbouring(self):
+        if QgsMapLayerRegistry.instance().count()==0:
+            return
+        
+        mLayer = self.iface.activeLayer()
+        if mLayer.type()!=0:
+            return
+                  
+        self.nbDialog = nbEditor.Dialog(self.iface, mLayer, self.mCanvas)
+        self.nbDialog.show()     
+        
+        
 
     def exp2GeoBUGS(self):
         if QgsMapLayerRegistry.instance().count()==0:

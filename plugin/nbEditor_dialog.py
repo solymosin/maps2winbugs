@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'nbEditor_dialog_base.ui'
 #
-# Created: Sat Aug  1 06:30:42 2015
+# Created: Mon Aug  3 16:54:00 2015
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,7 +17,7 @@ except AttributeError:
 class Ui_nbEditor_dialog(object):
     def setupUi(self, nbEditor_dialog):
         nbEditor_dialog.setObjectName(_fromUtf8("nbEditor_dialog"))
-        nbEditor_dialog.resize(428, 531)
+        nbEditor_dialog.resize(557, 537)
         self.gridLayout = QtGui.QGridLayout(nbEditor_dialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
@@ -55,7 +55,7 @@ class Ui_nbEditor_dialog(object):
         QtCore.QMetaObject.connectSlotsByName(nbEditor_dialog)
 
     def retranslateUi(self, nbEditor_dialog):
-        nbEditor_dialog.setWindowTitle(QtGui.QApplication.translate("nbEditor_dialog", "Neighbouring listg", None, QtGui.QApplication.UnicodeUTF8))
+        nbEditor_dialog.setWindowTitle(QtGui.QApplication.translate("nbEditor_dialog", "Neighbouring list", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("nbEditor_dialog", "Method:", None, QtGui.QApplication.UnicodeUTF8))
         self.pushCancel.setText(QtGui.QApplication.translate("nbEditor_dialog", "Close", None, QtGui.QApplication.UnicodeUTF8))
         self.pushOK.setText(QtGui.QApplication.translate("nbEditor_dialog", "Convert to BUGS", None, QtGui.QApplication.UnicodeUTF8))

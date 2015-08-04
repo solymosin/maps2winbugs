@@ -1,5 +1,5 @@
 #/***************************************************************************
-# map2WinBUGS
+# maps2WinBUGS
 #
 # a tool to facilitate data processing for Bayesian spatial modeling
 #							 -------------------
@@ -37,19 +37,26 @@ LOCALES =
 
 # translation
 SOURCES = __init__.py \
-	  maps2winbugs.py \
+	      maps2winbugs.py \
           plugin/__init__.py \
-          plugin/exp2BUGS.py
+          plugin/exp2BUGS.py \
+          plugin/nbEditor.py \
+          plugin/editor.py \
+          plugin/xdist.py  
 	
-PLUGINNAME = map2WinBUGS
+PLUGINNAME = maps2WinBUGS
 
 PY_FILES = __init__.py \
-	   plugin/__init__.py \
+	       plugin/__init__.py \
 
-UI_FILES = plugin/exp2BUGS_dialog.py
+UI_FILES = plugin/exp2BUGS_dialog.py \
+           plugin/nbEditor_dialog.py \
+           plugin/editor_dialog.py  \
+           plugin/xdist.py 
 
 EXTRAS = metadata.txt \
-         images/icon01.png 
+         images/icon01.png \
+         images/icon02.png 
 
 COMPILED_RESOURCE_FILES = resources_rc.py
 
