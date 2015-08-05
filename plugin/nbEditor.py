@@ -73,18 +73,48 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
     def map2tab(self):
         s = ''
         idx = self.tableView.selectionModel().selectedIndexes()[0]
-        ts = self.model.itemData(idx)
+        ts = str(self.model.itemData(idx)[0])
         
         for fid in sorted(self.ml.selectedFeaturesIds()):
             s += '%s,' % str(int(fid)+self.p)                   
-
+ 
         s = s[:-1]
-        
+         
         if s!=ts:
             self.model.setData(idx, s)
-        
-        #self.setWindowTitle(s)
-        
+         
+        # in order to handle the symmetry
+        if len(s)>len(ts):
+             iLst = s.strip().replace(' ', '').split(',')
+             jLst = ts.strip().replace(' ', '').split(',')
+        else:
+             iLst = ts.strip().replace(' ', '').split(',')
+             jLst = s.strip().replace(' ', '').split(',')
+              
+        cent = str(idx.row()+self.p)
+        dLst = list(set(iLst)-set(jLst))
+          
+        for d in dLst:              
+            row = int(d)-self.p
+            sor = str(self.model.itemData(self.model.index(row, 0))[0])
+            eLst = sor.strip().replace(' ', '').split(',')            
+            res = ''
+            if cent in set(eLst):
+                ii = eLst.index(cent)                
+                del eLst[ii]
+                eLst = sorted(map(int, eLst))                
+                for e in eLst:
+                    res += '%s,' % e
+                res = res[:-1]
+            else:
+                u = sor + ',%s' % cent
+                eLst = sorted(map(int, u.strip().replace(' ', '').split(',')))
+                for e in eLst:
+                    res += '%s,' % e
+                res = res[:-1]                 
+                               
+            self.model.setData(self.model.index(row, 0, QModelIndex()), res)
+                   
                 
     def nbWithinDist(self):
         dlg = xdist.Dialog()
