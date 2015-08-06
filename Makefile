@@ -42,7 +42,8 @@ SOURCES = __init__.py \
           plugin/exp2BUGS.py \
           plugin/nbEditor.py \
           plugin/editor.py \
-          plugin/xdist.py  
+          plugin/xdist.py  \
+		plugin/xabout.py  
 	
 PLUGINNAME = maps2WinBUGS
 
@@ -52,7 +53,8 @@ PY_FILES = __init__.py \
 UI_FILES = plugin/exp2BUGS_dialog.py \
            plugin/nbEditor_dialog.py \
            plugin/editor_dialog.py  \
-           plugin/xdist.py 
+           plugin/xdist.py \
+		plugin/xabout.py  
 
 EXTRAS = metadata.txt \
          images/icon01.png \

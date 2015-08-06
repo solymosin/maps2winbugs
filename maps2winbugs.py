@@ -2,13 +2,11 @@
 """
 /***************************************************************************
  maps2WinBUGS
-                                 A QGIS plugin
- a tool to facilitate data processing for
-Bayesian spatial modeling
+                                 A QGIS plugin  a tool to facilitate data processing for Bayesian spatial modeling
                               -------------------
         begin                : 2015-07-31
         git sha              : $Format:%H$
-        copyright            : (C) 2015 by Norbert Solymosi
+        copyright        : (C) 2015 by Norbert Solymosi
         email                : solymosi.norbert@gmail.com
  ***************************************************************************/
 
@@ -29,6 +27,7 @@ from qgis.core import QgsMapLayerRegistry
 
 from plugin import exp2BUGS
 from plugin import nbEditor
+from plugin import xabout
 
 import resources_rc
 import os.path
@@ -55,6 +54,7 @@ class maps2WinBUGS:
             self.plugin_dir,
             'i18n',
             'maps2winbugs_{}.qm'.format(locale))
+        self.vers = '2.231'
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -101,7 +101,14 @@ class maps2WinBUGS:
         self.iface.addPluginToMenu('&maps2WinBUGS', self.actNEIGH)
         self.actNEIGH.triggered.connect(self.Neighbouring)    
             
-
+        self.actAbout = QAction(
+            QCoreApplication.translate(
+                'maps2winbugs',
+                'About'),
+            self.iface.mainWindow())
+        self.iface.addPluginToMenu('&maps2WinBUGS', self.actAbout)
+        self.actAbout.triggered.connect(self.about)   
+        
         self.toolbar = self.iface.addToolBar(
             QCoreApplication.translate('maps2winbugs',
                                        'maps2WinBUGS'))
@@ -109,35 +116,58 @@ class maps2WinBUGS:
             QCoreApplication.translate('maps2winbugs',
                                        'maps2WinBUGS'))
 
-        self.toolbar.addAction(self.actNEIGH)
+        #self.toolbar.addAction(self.actNEIGH)
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         self.iface.removePluginMenu('&maps2WinBUGS', self.actBUGS)
         del self.toolbar
+       
+    
+    def  checklayer(self):
+        if QgsMapLayerRegistry.instance().count()==0:
+            QMessageBox.warning(self.iface.mainWindow(), 
+                                                    "Warning", 
+                                                    "Please add a vector layer.", 
+                                                    buttons=QMessageBox.Ok, defaultButton=QMessageBox.NoButton)               
+            return
+                
+        mLayer = self.iface.activeLayer()
+        if mLayer is None:
+            QMessageBox.warning(self.iface.mainWindow(), 
+                                                    "Warning", 
+                                                    "Please select an input layer.", 
+                                                    buttons=QMessageBox.Ok, defaultButton=QMessageBox.NoButton)         
+            return
+
+        if mLayer.type()!=0:
+            QMessageBox.warning(self.iface.mainWindow(), 
+                                                    "Warning", 
+                                                    "Please select a vector layer.", 
+                                                    buttons=QMessageBox.Ok, defaultButton=QMessageBox.NoButton)               
+            return        
+            
+        return mLayer
+
 
     def Neighbouring(self):
-        if QgsMapLayerRegistry.instance().count()==0:
-            return
-        
-        mLayer = self.iface.activeLayer()
-        if mLayer.type()!=0:
-            return
-                  
-        self.nbDialog = nbEditor.Dialog(self.iface, mLayer, self.mCanvas)
-        self.nbDialog.show()     
-        
-        
+        mLayer = self.checklayer()
+        if mLayer is not None :
+            self.nbDialog = nbEditor.Dialog(self.iface, mLayer, self.mCanvas)
+            self.nbDialog.show()     
+                
 
     def exp2GeoBUGS(self):
-        if QgsMapLayerRegistry.instance().count()==0:
-            return
-        
-        mLayer = self.iface.activeLayer()
-        if mLayer.type()!=0:
-            return
-                  
-        self.exp2BUGSDialog = exp2BUGS.Dialog(self.iface, mLayer)
-        self.exp2BUGSDialog.exec_()
+        mLayer = self.checklayer()
+        if mLayer is not None :
+            self.exp2BUGSDialog = exp2BUGS.Dialog(self.iface, mLayer)
+            self.exp2BUGSDialog.exec_()
 
 
+    def about(self):         
+            dlg = xabout.Dialog()
+            dlg.setWindowTitle('About')
+            dlg.plainTextEdit.appendPlainText('maps2WinBUGS ' + self.vers +'\n')
+            dlg.plainTextEdit.appendPlainText("Developed by\n\tNorbert Solymosi\n\tsolymosi.norbert@gmail.com\n")
+            dlg.plainTextEdit.appendPlainText("Contributors:\n\tSara E. Wagner\n\tAlberto Allepuz")
+            dlg.exec_()   

@@ -2,9 +2,7 @@
 """
 /***************************************************************************
  maps2WinBUGS
-                                 A QGIS plugin
- a tool to facilitate data processing for
-Bayesian spatial modeling
+                                 A QGIS plugin  a tool to facilitate data processing for Bayesian spatial modeling
                               -------------------
         begin                : 2015-07-31
         git sha              : $Format:%H$
