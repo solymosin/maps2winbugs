@@ -26,8 +26,6 @@ from qgis.core import QGis, QgsVectorLayer, QgsFeature, QgsGeometry, QgsVectorDa
 
 from exp2BUGS_dialog import Ui_exp2BUGS_dialog
 
-
-
 class Dialog(QDialog, Ui_exp2BUGS_dialog):         
     def __init__(self, iface, ml):
         """Constructor for the dialog.
@@ -57,6 +55,7 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
         
         self.comboBox.currentIndexChanged.connect(self.formatSelect)                    
         
+        
     def control(self):
         self.polynum = self.ml.featureCount()        
         feat = QgsFeature()
@@ -84,7 +83,6 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
                         self.cintlen(str(v.y()))               
         
         
-        
     def cintlen(self, num):
         nulls = 0
         darab = num.partition('.')
@@ -104,10 +102,10 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
             self.mind +=1           
         #float(s.partition('.')[2][-1:])==0
         
+        
     def formatSelect(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        self.control()
-        QApplication.restoreOverrideCursor()
+        self.control()        
         
         dh = 0
         prec = (11-self.intlen)-self.minull
@@ -133,7 +131,8 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
             scale = pow(10,0)
         
         self.plainTextEdit.insertPlainText('map:%s\n\nXscale:%s\nYscale:%s\n\n' % (self.polynum, scale, scale))
-              
+        
+        QApplication.restoreOverrideCursor()
 
     def save(self):
         fileName = QFileDialog.getSaveFileName(self, caption='Save As...')
@@ -148,14 +147,9 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
             return True
         except IOError:
             return False
-
   
 
-    def convArcInfo(self, prec):                                               
-#        prgDialog = QProgressDialog(self)
-#        prgDialog.setRange(0, self.polynum)
-#        prgDialog.setWindowTitle('Converting')            
-        
+    def convArcInfo(self, prec):                                                       
         for i in range(0, self.polynum):
             j = i+1
             self.plainTextEdit.appendPlainText("%s area%s" % (j,j))
@@ -226,31 +220,18 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
                                         "Polygon No. %s contains to many points to read into GeoBUGS.\nSimplifying of polygon can solve this problem." % (nu), 
                                         buttons=QMessageBox.Ok, defaultButton=QMessageBox.NoButton)
 		
-		self.progressBar.setValue(100*nu/self.polynum)
-#            prgDialog.setValue(nu)
-#            prgDialog.setLabelText(self.tr("Converted feature number %s of %s..." % (nu, self.polynum)))
-#        
-#            if prgDialog.wasCanceled():
-#                prgDialog.close()
-#                self.close()
-#                break
-#                
-#            QApplication.processEvents()
+            self.progressBar.setValue(100*nu/self.polynum)            
         
             nu += 1
             
         self.plainTextEdit.appendPlainText("END")
 
 
-    def convSplus(self, prec):                                               
-#        prgDialog = QProgressDialog(self)
-#        prgDialog.setRange(0, self.polynum)
-#        prgDialog.setWindowTitle('Converting')            
-        
+    def convSplus(self, prec):                                                      
         for i in range(0, self.polynum):
             j = i+1
             self.plainTextEdit.appendPlainText("%s area%s" % (j,j))
-#             
+
         self.plainTextEdit.appendPlainText("")  
         provider = self.ml.dataProvider()
         feat = QgsFeature()
@@ -286,18 +267,7 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
                                         "Polygon No. %s contains to many points to read into GeoBUGS.\nSimplifying of polygon can solve this problem." % (nu), 
                                         buttons=QMessageBox.Ok, defaultButton=QMessageBox.NoButton)
 					
-		self.progressBar.setValue(100*nu/self.polynum)
-
-#            prgDialog.setValue(nu)
-#            prgDialog.setLabelText(self.tr("Converted feature number %s of %s..." % (nu, self.polynum)))
-#        
-#            if prgDialog.wasCanceled():
-#                prgDialog.close()
-#                self.close()
-#                break
-#                
-#            QApplication.processEvents()
-        
+            self.progressBar.setValue(100*nu/self.polynum)        
             nu += 1
             
         self.plainTextEdit.appendPlainText("END")

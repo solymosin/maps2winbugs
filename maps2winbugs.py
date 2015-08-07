@@ -168,6 +168,6 @@ class maps2WinBUGS:
             dlg = xabout.Dialog()
             dlg.setWindowTitle('About')
             dlg.plainTextEdit.appendPlainText(u'maps2WinBUGS ' + self.vers +'\n')
-            dlg.plainTextEdit.appendPlainText(u"Developed by\n\tNorbert Solymosi\n\tsolymosi.norbert@gmail.com\n")
+            dlg.plainTextEdit.appendPlainText(u"Developed by\n\tSolymosi Norbert\n\tsolymosi.norbert@gmail.com\n")
             dlg.plainTextEdit.appendPlainText(u"Contributors:\n\tWagner, Sara E. \n\tAllepuz, Alberto\n\tMaróti-Agóts Ákos")
             dlg.exec_()   
