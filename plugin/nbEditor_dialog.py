@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'nbEditor_dialog_base.ui'
 #
-# Created: Thu Aug  6 08:53:25 2015
+# Created: Fri Aug  7 07:33:48 2015
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -32,24 +32,23 @@ class Ui_nbEditor_dialog(object):
         self.horizontalLayout_2.addWidget(self.comboBox)
         spacerItem = QtGui.QSpacerItem(119, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem)
-        self.gridLayout.addLayout(self.horizontalLayout_2, 0, 0, 1, 1)
+        self.gridLayout.addLayout(self.horizontalLayout_2, 0, 0, 1, 2)
         self.tableView = QtGui.QTableView(nbEditor_dialog)
         self.tableView.setObjectName(_fromUtf8("tableView"))
-        self.gridLayout.addWidget(self.tableView, 1, 0, 1, 1)
-        self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.gridLayout.addWidget(self.tableView, 1, 0, 1, 3)
         self.pushCancel = QtGui.QPushButton(nbEditor_dialog)
         self.pushCancel.setAutoDefault(False)
         self.pushCancel.setObjectName(_fromUtf8("pushCancel"))
-        self.horizontalLayout.addWidget(self.pushCancel)
-        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem1)
+        self.gridLayout.addWidget(self.pushCancel, 2, 0, 1, 1)
+        self.progressBar = QtGui.QProgressBar(nbEditor_dialog)
+        self.progressBar.setProperty("value", 24)
+        self.progressBar.setObjectName(_fromUtf8("progressBar"))
+        self.gridLayout.addWidget(self.progressBar, 2, 1, 1, 1)
         self.pushOK = QtGui.QPushButton(nbEditor_dialog)
         self.pushOK.setAutoDefault(False)
         self.pushOK.setDefault(True)
         self.pushOK.setObjectName(_fromUtf8("pushOK"))
-        self.horizontalLayout.addWidget(self.pushOK)
-        self.gridLayout.addLayout(self.horizontalLayout, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.pushOK, 2, 2, 1, 1)
 
         self.retranslateUi(nbEditor_dialog)
         QtCore.QMetaObject.connectSlotsByName(nbEditor_dialog)

@@ -42,25 +42,13 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         self.setupUi(self)
         
         self.ml = ml
-        self.mCanvas = mc  
-#        self.p = 1 
-#        self.mod = 0
-        
+        self.mCanvas = mc         
         self.mRubberBand = QgsRubberBand(self.mCanvas, True)
         self.mRubberBand.reset(QGis.Polygon)
         self.mRubberBand.setColor(Qt.red)
         self.mRubberBand.setWidth(2)        
         
-        self.model = QStandardItemModel(0, 1)
-        self.model = QStandardItemModel(self.ml.dataProvider().featureCount(), 1)
-        self.tableView.setModel(self.model)
-        self.model.setHeaderData(0, Qt.Horizontal, 'Neighbouring IDs')
-        self.tableView.setSelectionMode(QAbstractItemView.SingleSelection)
-        
-        self.selectionModel = QItemSelectionModel(self.model)
-        self.tableView.setSelectionModel(self.selectionModel)
-        self.tableView.horizontalHeader().setStretchLastSection(True)
-#        self.ini(0)
+        self.ini(0)
         
         self.pushCancel.clicked.connect(self.close)
         self.pushOK.clicked.connect(self.convert)
@@ -69,17 +57,17 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         self.comboBox.currentIndexChanged.connect(self.nbMethod)         
         self.ml.selectionChanged.connect(self.map2tab)
         
-#    def ini(self, n):
-##        self.ml.dataProvider().featureCount()
-#        self.model = QStandardItemModel(n, 1)
-#        self.tableView.setModel(self.model)
-#        self.model.setHeaderData(0, Qt.Horizontal, 'Neighbouring IDs')
-#        self.tableView.setSelectionMode(QAbstractItemView.SingleSelection)
-#        
-#        self.selectionModel = QItemSelectionModel(self.model)
-#        self.tableView.setSelectionModel(self.selectionModel)
-#        self.tableView.horizontalHeader().setStretchLastSection(True)    
-#        self.tableView.selectionModel().selectionChanged.connect(self.tab2map)
+        
+    def ini(self, n):
+        self.model = QStandardItemModel(n, 1)
+        self.tableView.setModel(self.model)
+        self.model.setHeaderData(0, Qt.Horizontal, 'Neighbouring IDs')
+        self.tableView.setSelectionMode(QAbstractItemView.SingleSelection)        
+        self.selectionModel = QItemSelectionModel(self.model)
+        self.tableView.setSelectionModel(self.selectionModel)
+        self.tableView.horizontalHeader().setStretchLastSection(True)    
+        self.tableView.selectionModel().selectionChanged.connect(self.tab2map)
+	self.progressBar.setValue(0)
     
     
     def map2tab(self):
@@ -120,7 +108,6 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
                 res = res[:-1]
             else:
                 u = sor + ',%s' % cent
-#                self.plainTextEdit.appendPlainText(u)
                 eLst = sorted(map(int, u.strip().replace(' ', '').split(',')))
                 for e in eLst:
                     res += '%s,' % e
@@ -139,8 +126,6 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
             if lDist==0:
                 return
             
-            self.plainTextEdit.appendPlainText(str(lDist))
-            
             feat = QgsFeature()
             provider = self.ml.dataProvider()
             e = provider.featureCount()                    
@@ -158,9 +143,9 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
                 self.mod = 0
                 self.p = 1        
                 
-            prgDialog = QProgressDialog(self)
-            prgDialog.setRange(0, e)
-            prgDialog.setWindowTitle('Neigbouring')   
+#            prgDialog = QProgressDialog(self)
+#            prgDialog.setRange(0, e)
+#            prgDialog.setWindowTitle('Neigbouring')   
                 
             feats = provider.getFeatures()   
             self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
@@ -169,20 +154,20 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
             while feats.nextFeature(feat):
                 ne += 1
                 self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
-#                geom = QgsGeometry(feat.geometry())      
-#                neighbours = self.hdist(geom, lDist)
-                neighbours = self.hintersect(feat)
+                geom = QgsGeometry(feat.geometry())      
+                neighbours = self.hdist(feat, lDist)
                 row = feat.id()-self.mod    
                 self.model.setData(self.model.index(row, 0, QModelIndex()), neighbours)
-                prgDialog.setValue(ne)
-                prgDialog.setLabelText(self.tr("Neighboured feature count %s of %s..." % (ne, e)))
+		self.progressBar.setValue(100*ne/e)
+#                prgDialog.setValue(ne)
+#                prgDialog.setLabelText(self.tr("Neighboured feature count %s of %s..." % (ne, e)))
             
-                if prgDialog.wasCanceled():
-                    prgDialog.close()
-                    self.close()
-                    break
-                    
-                QApplication.processEvents()                
+#                if prgDialog.wasCanceled():
+#                    prgDialog.close()
+#                    self.close()
+#                    break
+#                    
+#                QApplication.processEvents()                
             
             
     def hdist(self, feata, lDist):
@@ -269,17 +254,10 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
 
 
     def nbMethod(self):
+        self.ml.selectionChanged.disconnect(self.map2tab)
         self.model.removeRows(0, self.model.rowCount(QModelIndex()), QModelIndex())
-        self.model = QStandardItemModel(self.ml.dataProvider().featureCount(), 1)
-        self.tableView.setModel(self.model)
-        self.model.setHeaderData(0, Qt.Horizontal, 'Neighbouring IDs')
-        self.tableView.setSelectionMode(QAbstractItemView.SingleSelection)
-        
-        self.selectionModel = QItemSelectionModel(self.model)
-        self.tableView.setSelectionModel(self.selectionModel)
-        self.tableView.horizontalHeader().setStretchLastSection(True)    
-        self.tableView.selectionModel().selectionChanged.connect(self.tab2map)        
-        
+        self.ini(self.ml.dataProvider().featureCount())
+        	
         if self.comboBox.currentText()=="Touches":            
             if self.ml.geometryType()==0:
                 return
@@ -293,6 +271,8 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         if self.comboBox.currentText()=="Within distance":
             self.nbWithinDist()
 
+        self.ml.selectionChanged.connect(self.map2tab)
+        
             
     def nbTouches(self):                                
         feat = QgsFeature()
@@ -312,9 +292,9 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
             self.mod = 0
             self.p = 1             
             
-        prgDialog = QProgressDialog(self)
-        prgDialog.setRange(0, e)
-        prgDialog.setWindowTitle('Neigbouring')   
+#        prgDialog = QProgressDialog(self)
+#        prgDialog.setRange(0, e)
+#        prgDialog.setWindowTitle('Neigbouring')   
             
         feats = provider.getFeatures()   
         self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
@@ -323,20 +303,20 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         while feats.nextFeature(feat):
             ne += 1
             self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
-#            geom = QgsGeometry(feat.geometry())      
-#            neighbours = self.htouch(geom)
-            neighbours = self.hintersect(feat)
+            geom = QgsGeometry(feat.geometry())      
+            neighbours = self.htouch(feat)
             row = feat.id()-self.mod    
             self.model.setData(self.model.index(row, 0, QModelIndex()), neighbours)
-            prgDialog.setValue(ne)
-            prgDialog.setLabelText(self.tr("Neighboured feature count %s of %s..." % (ne, e)))
-        
-            if prgDialog.wasCanceled():
-                prgDialog.close()
-                self.close()
-                break
-                
-            QApplication.processEvents()                
+#            prgDialog.setValue(ne)
+#            prgDialog.setLabelText(self.tr("Neighboured feature count %s of %s..." % (ne, e)))
+	    self.progressBar.setValue(100*ne/e)
+
+#            if prgDialog.wasCanceled():
+#                prgDialog.close()
+#                self.close()
+#                break
+#                
+#            QApplication.processEvents()                
 
          
     def htouch(self, feata):
@@ -376,9 +356,9 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
             self.mod = 0
             self.p = 1   
             
-        prgDialog = QProgressDialog(self)
-        prgDialog.setRange(0, e)
-        prgDialog.setWindowTitle('Neigbouring')   
+#        prgDialog = QProgressDialog(self)
+#        prgDialog.setRange(0, e)
+#        prgDialog.setWindowTitle('Neigbouring')   
             
         feats = provider.getFeatures()   
         self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
@@ -387,20 +367,19 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         while feats.nextFeature(feat):
             ne += 1
             self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
-#            geom = QgsGeometry(feat.geometry())      
-#            neighbours = self.hintersect(geom)
             neighbours = self.hintersect(feat)
             row = feat.id()-self.mod    
             self.model.setData(self.model.index(row, 0, QModelIndex()), neighbours)
-            prgDialog.setValue(ne)
-            prgDialog.setLabelText(self.tr("Neighboured feature count %s of %s..." % (ne, e)))
-        
-            if prgDialog.wasCanceled():
-                prgDialog.close()
-                self.close()
-                break
-                
-            QApplication.processEvents()                
+	    self.progressBar.setValue(100*ne/e)
+#            prgDialog.setValue(ne)
+#            prgDialog.setLabelText(self.tr("Neighboured feature count %s of %s..." % (ne, e)))
+	        
+#            if prgDialog.wasCanceled():
+#                prgDialog.close()
+#                self.close()
+#                break
+#                
+#            QApplication.processEvents()                
 
          
     def hintersect(self, feata):

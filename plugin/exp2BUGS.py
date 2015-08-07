@@ -49,7 +49,7 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
         self.mind = 0
         self.minull = 1000
         
-        
+        self.progressBar.setValue(0)
         self.pushButton.clicked.connect(self.save)
         self.pushButton_2.clicked.connect(self.close)
         
@@ -152,9 +152,9 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
   
 
     def convArcInfo(self, prec):                                               
-        prgDialog = QProgressDialog(self)
-        prgDialog.setRange(0, self.polynum)
-        prgDialog.setWindowTitle('Converting')            
+#        prgDialog = QProgressDialog(self)
+#        prgDialog.setRange(0, self.polynum)
+#        prgDialog.setWindowTitle('Converting')            
         
         for i in range(0, self.polynum):
             j = i+1
@@ -225,16 +225,17 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
                                         "Too many points", 
                                         "Polygon No. %s contains to many points to read into GeoBUGS.\nSimplifying of polygon can solve this problem." % (nu), 
                                         buttons=QMessageBox.Ok, defaultButton=QMessageBox.NoButton)
-
-            prgDialog.setValue(nu)
-            prgDialog.setLabelText(self.tr("Converted feature number %s of %s..." % (nu, self.polynum)))
-        
-            if prgDialog.wasCanceled():
-                prgDialog.close()
-                self.close()
-                break
-                
-            QApplication.processEvents()
+		
+		self.progressBar.setValue(100*nu/self.polynum)
+#            prgDialog.setValue(nu)
+#            prgDialog.setLabelText(self.tr("Converted feature number %s of %s..." % (nu, self.polynum)))
+#        
+#            if prgDialog.wasCanceled():
+#                prgDialog.close()
+#                self.close()
+#                break
+#                
+#            QApplication.processEvents()
         
             nu += 1
             
@@ -242,9 +243,9 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
 
 
     def convSplus(self, prec):                                               
-        prgDialog = QProgressDialog(self)
-        prgDialog.setRange(0, self.polynum)
-        prgDialog.setWindowTitle('Converting')            
+#        prgDialog = QProgressDialog(self)
+#        prgDialog.setRange(0, self.polynum)
+#        prgDialog.setWindowTitle('Converting')            
         
         for i in range(0, self.polynum):
             j = i+1
@@ -284,16 +285,18 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
                                         "Too many points", 
                                         "Polygon No. %s contains to many points to read into GeoBUGS.\nSimplifying of polygon can solve this problem." % (nu), 
                                         buttons=QMessageBox.Ok, defaultButton=QMessageBox.NoButton)
+					
+		self.progressBar.setValue(100*nu/self.polynum)
 
-            prgDialog.setValue(nu)
-            prgDialog.setLabelText(self.tr("Converted feature number %s of %s..." % (nu, self.polynum)))
-        
-            if prgDialog.wasCanceled():
-                prgDialog.close()
-                self.close()
-                break
-                
-            QApplication.processEvents()
+#            prgDialog.setValue(nu)
+#            prgDialog.setLabelText(self.tr("Converted feature number %s of %s..." % (nu, self.polynum)))
+#        
+#            if prgDialog.wasCanceled():
+#                prgDialog.close()
+#                self.close()
+#                break
+#                
+#            QApplication.processEvents()
         
             nu += 1
             
