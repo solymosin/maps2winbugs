@@ -54,7 +54,7 @@ class maps2WinBUGS:
             self.plugin_dir,
             'i18n',
             'maps2winbugs_{}.qm'.format(locale))
-        self.vers = '2.231'
+        self.vers = '2.24'
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -116,7 +116,7 @@ class maps2WinBUGS:
             QCoreApplication.translate('maps2winbugs',
                                        'maps2WinBUGS'))
 
-        #self.toolbar.addAction(self.actNEIGH)
+        self.toolbar.addAction(self.actNEIGH)
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""

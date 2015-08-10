@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'nbEditor_dialog_base.ui'
 #
-# Created: Fri Aug  7 07:33:48 2015
+# Created: Sun Aug  9 04:16:17 2015
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
