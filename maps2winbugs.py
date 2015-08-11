@@ -28,6 +28,7 @@ from qgis.core import QgsMapLayerRegistry
 from plugin import exp2BUGS
 from plugin import nbEditor
 from plugin import xabout
+from plugin import attr2BUGS
 
 import resources_rc
 import os.path
@@ -63,7 +64,6 @@ class maps2WinBUGS:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
-        
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -99,7 +99,16 @@ class maps2WinBUGS:
                 'Neighbouring'),
             self.iface.mainWindow())
         self.iface.addPluginToMenu('&maps2WinBUGS', self.actNEIGH)
-        self.actNEIGH.triggered.connect(self.Neighbouring)    
+        self.actNEIGH.triggered.connect(self.Neighbouring)
+
+        self.actATTR = QAction(
+            QIcon(':/plugins/maps2WinBUGS/images/icon03.png'),
+            QCoreApplication.translate(
+                'maps2winbugs',
+                'Attributes to BUGS'),
+            self.iface.mainWindow())
+        self.iface.addPluginToMenu('&maps2WinBUGS', self.actATTR)
+        self.actATTR.triggered.connect(self.attr2bugs)
             
         self.actAbout = QAction(
             QCoreApplication.translate(
@@ -116,7 +125,8 @@ class maps2WinBUGS:
             QCoreApplication.translate('maps2winbugs',
                                        'maps2WinBUGS'))
 
-        self.toolbar.addAction(self.actNEIGH)
+        self.toolbar.addAction(self.actATTR)
+
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -152,22 +162,29 @@ class maps2WinBUGS:
 
     def Neighbouring(self):
         mLayer = self.checklayer()
-        if mLayer is not None :
+        if mLayer is not None:
             self.nbDialog = nbEditor.Dialog(self.iface, mLayer, self.mCanvas)
             self.nbDialog.show()     
                 
 
     def exp2GeoBUGS(self):
         mLayer = self.checklayer()
-        if mLayer is not None :
+        if mLayer is not None:
             self.exp2BUGSDialog = exp2BUGS.Dialog(self.iface, mLayer)
             self.exp2BUGSDialog.exec_()
 
 
     def about(self):         
-            dlg = xabout.Dialog()
-            dlg.setWindowTitle('About')
-            dlg.plainTextEdit.appendPlainText(u'maps2WinBUGS ' + self.vers +'\n')
-            dlg.plainTextEdit.appendPlainText(u"Developed by\n\tSolymosi Norbert\n\tsolymosi.norbert@gmail.com\n")
-            dlg.plainTextEdit.appendPlainText(u"Contributors:\n\tWagner, Sara E. \n\tAllepuz, Alberto\n\tMaróti-Agóts Ákos")
-            dlg.exec_()   
+        dlg = xabout.Dialog()
+        dlg.setWindowTitle('About')
+        dlg.plainTextEdit.appendPlainText(u'maps2WinBUGS ' + self.vers +'\n')
+        dlg.plainTextEdit.appendPlainText(u"Developed by\n\tSolymosi Norbert\n\tsolymosi.norbert@gmail.com\n")
+        dlg.plainTextEdit.appendPlainText(u"Contributors:\n\tWagner, Sara E. \n\tAllepuz, Alberto\n\tMaróti-Agóts Ákos")
+        dlg.exec_()
+
+
+    def attr2bugs(self):
+        mLayer = self.checklayer()
+        if mLayer is not None:
+            self.attrDlg = attr2BUGS.Dialog(self.iface, mLayer)
+            self.attrDlg.exec_()

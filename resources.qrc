@@ -2,5 +2,6 @@
     <qresource prefix="/plugins/maps2WinBUGS">
         <file>images/icon01.png</file>
         <file>images/icon02.png</file>
+        <file>images/icon03.png</file>
     </qresource>
 </RCC>
