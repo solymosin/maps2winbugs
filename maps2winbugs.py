@@ -125,7 +125,7 @@ class maps2WinBUGS:
             QCoreApplication.translate('maps2winbugs',
                                        'maps2WinBUGS'))
 
-        self.toolbar.addAction(self.actATTR)
+        # self.toolbar.addAction(self.actATTR)
 
 
     def unload(self):
