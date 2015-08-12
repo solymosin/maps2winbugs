@@ -133,23 +133,22 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
             lDist = float(dlg.lineEdit.text())
             if lDist==0:
                 return
-            
+
             feat = QgsFeature()
             provider = self.ml.dataProvider()
-            e = provider.featureCount()                    
-                    
+            e = provider.featureCount()
+
             self.settings()
-                
-            feats = provider.getFeatures()   
-            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-            self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
-            ne = 0                
-            while feats.nextFeature(feat):
-                ne += 1
-                self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
-                geom = QgsGeometry(feat.geometry())      
+
+            for ne in range(self.mod, e + self.mod):
+                feat = QgsFeature()
+                geom = QgsGeometry()
+                fiter = self.ml.getFeatures(QgsFeatureRequest(ne))
+                if fiter.nextFeature(feat):
+                    geom = QgsGeometry(feat.geometry())
+
                 neighbours = self.hdist(feat, lDist)
-                row = feat.id()-self.mod    
+                row = feat.id()-self.mod
                 self.model.setData(self.model.index(row, 0, QModelIndex()), neighbours)
                 self.progressBar.setValue(100*ne/e)
 
@@ -285,15 +284,14 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         e = provider.featureCount()
 
         self.settings()
-            
-        feats = provider.getFeatures()   
-        self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
-        ne = 0                
-        while feats.nextFeature(feat):
-            ne += 1
-            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
-            geom = QgsGeometry(feat.geometry())      
+
+        for ne in range(self.mod, e + self.mod):
+            feat = QgsFeature()
+            geom = QgsGeometry()
+            fiter = self.ml.getFeatures(QgsFeatureRequest(ne))
+            if fiter.nextFeature(feat):
+                geom = QgsGeometry(feat.geometry())
+
             neighbours = self.htouch(feat)
             row = feat.id()-self.mod    
             self.model.setData(self.model.index(row, 0, QModelIndex()), neighbours)
@@ -319,22 +317,22 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         return neighbours[:-1]
 
     
-    def nbIntersects(self):                                
+    def nbIntersects(self):
         feat = QgsFeature()
         provider = self.ml.dataProvider()
         e = provider.featureCount()
 
         self.settings()
-            
-        feats = provider.getFeatures()   
-        self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
-        ne = 0                
-        while feats.nextFeature(feat):
-            ne += 1
-            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
+
+        for ne in range(self.mod, e + self.mod):
+            feat = QgsFeature()
+            geom = QgsGeometry()
+            fiter = self.ml.getFeatures(QgsFeatureRequest(ne))
+            if fiter.nextFeature(feat):
+                geom = QgsGeometry(feat.geometry())
+
             neighbours = self.hintersect(feat)
-            row = feat.id()-self.mod    
+            row = feat.id()-self.mod
             self.model.setData(self.model.index(row, 0, QModelIndex()), neighbours)
             self.progressBar.setValue(100*ne/e)
 
