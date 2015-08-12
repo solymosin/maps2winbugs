@@ -29,6 +29,7 @@ from plugin import nbEditor
 from plugin import xabout
 from plugin import attr2BUGS
 from plugin import editor
+from plugin import splusimport
 
 
 import resources_rc
@@ -119,6 +120,15 @@ class maps2WinBUGS:
             self.iface.mainWindow())
         self.iface.addPluginToMenu('&maps2WinBUGS', self.actNEIGH)
         self.actNEIGH.triggered.connect(self.Neighbouring)
+
+        self.actSPLUS = QAction(
+            QIcon(':/plugins/maps2WinBUGS/images/icon06.png'),
+            QCoreApplication.translate(
+                'maps2winbugs',
+                'Import S-Plus map'),
+            self.iface.mainWindow())
+        self.iface.addPluginToMenu('&maps2WinBUGS', self.actSPLUS)
+        self.actSPLUS.triggered.connect(self.importSplus)
             
         self.actAbout = QAction(
             QIcon(':/plugins/maps2WinBUGS/images/icon04.png'),
@@ -169,6 +179,13 @@ class maps2WinBUGS:
             return        
             
         return mLayer
+
+
+    def importSplus(self):
+        dlg = splusimport.Dialog(self.iface)
+        dlg.setModal(True)
+        dlg.setWindowTitle('Import S-Plus map')
+        dlg.exec_()
 
 
     def cntr2bugs(self):
@@ -238,6 +255,7 @@ class maps2WinBUGS:
         dlg.plainTextEdit.appendPlainText(u'maps2WinBUGS ' + self.vers +'\n')
         dlg.plainTextEdit.appendPlainText(u"Developed by\n\tSolymosi Norbert\n\tsolymosi.norbert@gmail.com\n")
         dlg.plainTextEdit.appendPlainText(u"Contributors:\n\tWagner, Sara E. \n\tAllepuz, Alberto\n\tMaróti-Agóts Ákos")
+        dlg.plainTextEdit.appendPlainText(u"\n\nIcons came from www.flaticon.com")
         dlg.exec_()
 
 
