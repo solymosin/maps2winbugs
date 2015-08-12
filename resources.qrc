@@ -3,5 +3,7 @@
         <file>images/icon01.png</file>
         <file>images/icon02.png</file>
         <file>images/icon03.png</file>
+        <file>images/icon04.png</file>
+        <file>images/icon05.png</file>
     </qresource>
 </RCC>

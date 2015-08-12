@@ -21,13 +21,15 @@
 """
 
 from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from qgis.core import QgsMapLayerRegistry
+from PyQt4.QtCore import SIGNAL, Qt, QSettings, QCoreApplication
+from qgis.core import QgsMapLayerRegistry, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsPoint
 
 from plugin import exp2BUGS
 from plugin import nbEditor
 from plugin import xabout
 from plugin import attr2BUGS
+from plugin import editor
+
 
 import resources_rc
 import os.path
@@ -54,7 +56,7 @@ class maps2WinBUGS:
             self.plugin_dir,
             'i18n',
             'maps2winbugs_{}.qm'.format(locale))
-        self.vers = '2.24'
+        self.vers = '2.25'
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -86,19 +88,19 @@ class maps2WinBUGS:
             QIcon(':/plugins/maps2WinBUGS/images/icon01.png'),
             QCoreApplication.translate(
                 'maps2winbugs',
-                'Export to GeoBUGS'),
+                'Map to BUGS'),
             self.iface.mainWindow())
         self.iface.addPluginToMenu('&maps2WinBUGS', self.actBUGS)
         self.actBUGS.triggered.connect(self.exp2GeoBUGS)
-        
-        self.actNEIGH = QAction(
-            QIcon(':/plugins/maps2WinBUGS/images/icon02.png'),
+
+        self.actCNTR = QAction(
+            QIcon(':/plugins/maps2WinBUGS/images/icon05.png'),
             QCoreApplication.translate(
                 'maps2winbugs',
-                'Neighbouring'),
+                'Centroids to BUGS'),
             self.iface.mainWindow())
-        self.iface.addPluginToMenu('&maps2WinBUGS', self.actNEIGH)
-        self.actNEIGH.triggered.connect(self.Neighbouring)
+        self.iface.addPluginToMenu('&maps2WinBUGS', self.actCNTR)
+        self.actCNTR.triggered.connect(self.cntr2bugs)
 
         self.actATTR = QAction(
             QIcon(':/plugins/maps2WinBUGS/images/icon03.png'),
@@ -108,8 +110,18 @@ class maps2WinBUGS:
             self.iface.mainWindow())
         self.iface.addPluginToMenu('&maps2WinBUGS', self.actATTR)
         self.actATTR.triggered.connect(self.attr2bugs)
+
+        self.actNEIGH = QAction(
+            QIcon(':/plugins/maps2WinBUGS/images/icon02.png'),
+            QCoreApplication.translate(
+                'maps2winbugs',
+                'Neighbouring'),
+            self.iface.mainWindow())
+        self.iface.addPluginToMenu('&maps2WinBUGS', self.actNEIGH)
+        self.actNEIGH.triggered.connect(self.Neighbouring)
             
         self.actAbout = QAction(
+            QIcon(':/plugins/maps2WinBUGS/images/icon04.png'),
             QCoreApplication.translate(
                 'maps2winbugs',
                 'About'),
@@ -157,6 +169,53 @@ class maps2WinBUGS:
             return        
             
         return mLayer
+
+
+    def cntr2bugs(self):
+        mLayer = self.checklayer()
+        if mLayer is not None:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+
+            dlg = editor.Dialog()
+            dlg.setModal(True)
+            dlg.setWindowTitle("Centroids in BUGS format")
+
+            provider = mLayer.dataProvider()
+            e = provider.featureCount()
+
+            ids = []
+            x = "x = c("
+            y = "y = c("
+
+            feats = provider.getFeatures()
+            dlg.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+            dlg.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, e))
+            ne = 0
+            feat = QgsFeature()
+            while feats.nextFeature(feat):
+                ne += 1
+                dlg.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
+                ids.append(feat.id())
+
+            mod = min(ids)
+
+            for ne in range(mod, e + mod):
+                feat = QgsFeature()
+                pt = QgsPoint()
+                fiter = mLayer.getFeatures(QgsFeatureRequest(ne))
+                if fiter.nextFeature(feat):
+                    pt = QgsGeometry(feat.geometry().centroid()).asPoint()
+                    # pt = QgsGeometry(geom.centroid()).asPoint()
+
+                x += '%s, ' % pt.x()
+                y += '%s, ' % pt.y()
+
+            dlg.plainTextEdit.appendPlainText(x[:-2]+')')
+            dlg.plainTextEdit.appendPlainText(y[:-2]+')')
+
+            QApplication.restoreOverrideCursor()
+
+            dlg.exec_()
 
 
     def Neighbouring(self):
