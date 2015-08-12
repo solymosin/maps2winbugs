@@ -20,10 +20,9 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import SIGNAL, Qt, QFile, QIODevice, QTextStream, QVariant, QModelIndex
-from PyQt4.QtGui import QDialog, QProgressDialog, QFileDialog, QMessageBox, QApplication, QTextCursor, QStandardItem, QStandardItemModel
-from qgis.core import QGis, QgsVectorLayer, QgsFeature, QgsGeometry, QgsVectorDataProvider, QgsFields, QgsField, \
-    QgsFeatureRequest, QgsPoint
+from PyQt4.QtCore import SIGNAL, Qt, QFile, QIODevice, QTextStream
+from PyQt4.QtGui import QDialog, QFileDialog, QApplication, QStandardItem, QStandardItemModel
+from qgis.core import QgsFeature, QgsFeatureRequest
 
 from attr2BUGS_dialog import Ui_attr2BUGS
 

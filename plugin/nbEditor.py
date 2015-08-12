@@ -20,10 +20,10 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import SIGNAL, Qt, QFile, QIODevice, QTextStream, QObject, QModelIndex
-from PyQt4.QtGui import QDialog, QProgressDialog, QFileDialog, QMessageBox, QApplication, QTextCursor, QStandardItemModel, QAbstractItemView, QItemSelectionModel,  QPlainTextEdit
-from qgis.core import QGis, QgsVectorLayer, QgsFeature, QgsGeometry, QgsVectorDataProvider, QgsFields, QgsField, QgsFeatureRequest, QgsPoint, QgsVectorLayerCache
-from qgis.gui import QgsMapCanvas, QgsRubberBand
+from PyQt4.QtCore import SIGNAL, Qt, QModelIndex
+from PyQt4.QtGui import QDialog, QApplication, QStandardItemModel, QAbstractItemView, QItemSelectionModel
+from qgis.core import QGis, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsVectorLayerCache
+from qgis.gui import QgsRubberBand
 
 from nbEditor_dialog import Ui_nbEditor_dialog
 import editor

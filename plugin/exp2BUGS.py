@@ -21,9 +21,8 @@
 """
 
 from PyQt4.QtCore import SIGNAL, Qt, QFile, QIODevice, QTextStream
-from PyQt4.QtGui import QDialog, QProgressDialog, QFileDialog, QMessageBox, QApplication, QTextCursor
-from qgis.core import QGis, QgsVectorLayer, QgsFeature, QgsGeometry, QgsVectorDataProvider, QgsFields, QgsField, \
-    QgsFeatureRequest, QgsPoint
+from PyQt4.QtGui import QDialog, QFileDialog, QMessageBox, QApplication, QTextCursor
+from qgis.core import QgsFeature, QgsGeometry, QgsFeatureRequest
 
 from exp2BUGS_dialog import Ui_exp2BUGS_dialog
 
