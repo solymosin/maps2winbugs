@@ -20,10 +20,10 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import SIGNAL, Qt, QModelIndex, QDir, QFileInfo, QSettings
-from PyQt4.QtGui import QDialog, QFileDialog, QApplication, QStandardItemModel, QAbstractItemView, QItemSelectionModel
-from qgis.core import QGis, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsVectorLayerCache
-from qgis.gui import QgsRubberBand, QgsEncodingFileDialog
+from qgis.core import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+from qgis.gui import *
 
 from splusimport_dialog import Ui_SPlusImport
 
@@ -40,6 +40,9 @@ class Dialog(QDialog, Ui_SPlusImport):
 
         self.setupUi(self)
 
+        self.settings = QSettings()
+        self.enc = self.settings.value('/Processing/encoding', 'System')
+
         self.connect(self.buttonBox, SIGNAL('rejected()'), self.reject)
         self.connect(self.buttonBox, SIGNAL('accepted()'), self.accept)
         self.toolButton.clicked.connect(self.fileSource)
@@ -52,17 +55,13 @@ class Dialog(QDialog, Ui_SPlusImport):
 
 
     def fileDest(self):
-        settings = QSettings()
-        enc = settings.value('/Processing/encoding', 'System')
-
-        oFD = QgsEncodingFileDialog(self, self.tr("Save As"), QDir.currentPath(), "Shape files (*.shp)", enc)
+        oFD = QgsEncodingFileDialog(self, self.tr("Save As"), QDir.currentPath(), "Shape files (*.shp)", self.enc)
         oFD.setFileMode(QFileDialog.AnyFile)
         oFD.setAcceptMode(QFileDialog.AcceptSave)
         oFD.setConfirmOverwrite(True)
 
         if oFD.exec_()==QDialog.Accepted:
             files = oFD.selectedFiles()
-            encoding = unicode(oFD.encoding())
             fn = unicode(files[0])
             fi = QFileInfo(fn)
             if fi.completeSuffix()=='':
@@ -74,4 +73,71 @@ class Dialog(QDialog, Ui_SPlusImport):
 
 
     def accept(self):
-        k = 1
+        splusfile = self.lineEdit.text()
+        output = self.lineEdit_2.text()
+
+        if splusfile=="" or output=="":
+            return
+
+        srs = QgsCoordinateReferenceSystem()
+
+        # self.setWindowTitle(srs)
+
+        map = QFile(splusfile)
+        map.open(QIODevice.ReadOnly)
+        stream = QTextStream(map)
+        sep = ":"
+        # labs = QStringList()
+        line = stream.readLine()
+        slen = 0
+        featnum = int(line.strip().replace(' ', '').split(sep)[1])
+
+        sep = '\t'
+
+        for i in range(0, featnum):
+            line = stream.readLine()
+            chunk = line.strip().replace(' ', '').split(sep)[1]
+            if slen<len(chunk):
+                slen = len(chunk)
+
+        # fields = QgsFieldMap()
+        fld = QgsField("id", QVariant.String, "String", slen, 0, "")
+        # fields.insert(fields.count(), fld)
+        id = ''
+        feats = ''
+        idLst = []
+        featLst = []
+        p1 = QgsPoint()
+        p2 = QgsPoint()
+        pi = 0
+
+        line = stream.readLine()
+        self.setWindowTitle(line)
+        # while not stream.atEnd():
+        #     line = stream.readLine()
+        #     self.setWindowTitle(line)
+            # lst = line.strip().replace(' ', '').split(sep)
+            # if len(lst)==3:
+            #     if line!="NA\tNA\tNA":
+            #         if pi==0:
+            #             p1.setX(float(lst[1]))
+            #             p1.setY(float(lst[2]))
+            #         feats+= '%s %s' % (float(lst[1]), float(lst[2]))
+            #         id = lst[0]
+            #         pi+=1
+            #     elif line=="NA\tNA\tNA":
+            #         p2.setX(float(lst[1]))
+            #         p2.setY(float(lst[2]))
+            #         if p1!=p2:
+            #             feats+= '%s %s' % (p1.x(), p1.y())
+            #         idLst.append(id)
+            #         qs = feats[:-2]
+            #         featLst.append(qs)
+            #         pi = 0
+
+                    # self.setWindowTitle(qs)
+
+
+
+
+

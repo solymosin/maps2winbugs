@@ -185,6 +185,10 @@ class maps2WinBUGS:
         dlg = splusimport.Dialog(self.iface)
         dlg.setModal(True)
         dlg.setWindowTitle('Import S-Plus map')
+
+        dlg.lineEdit.setText('/home/sn/Desktop/Belgium.txt')
+        dlg.lineEdit_2.setText('/home/sn/Desktop/be.shp')
+
         dlg.exec_()
 
 
