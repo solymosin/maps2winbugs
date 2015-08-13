@@ -21,8 +21,8 @@
 """
 
 from PyQt4.QtGui import *
-from PyQt4.QtCore import SIGNAL, Qt, QSettings, QCoreApplication
-from qgis.core import QgsMapLayerRegistry, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsPoint
+from PyQt4.QtCore import SIGNAL, Qt, QSettings, QCoreApplication, QFile, QFileInfo
+from qgis.core import QgsMapLayerRegistry, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsPoint, QgsVectorLayer, QgsCoordinateReferenceSystem
 
 from plugin import exp2BUGS
 from plugin import nbEditor
@@ -189,7 +189,10 @@ class maps2WinBUGS:
         dlg.lineEdit.setText('/home/sn/Desktop/Belgium.txt')
         dlg.lineEdit_2.setText('/home/sn/Desktop/be.shp')
 
-        dlg.exec_()
+        if dlg.exec_() == QDialog.Accepted:
+            file = QFileInfo(dlg.lineEdit_2.text())
+            nl = QgsVectorLayer(dlg.lineEdit_2.text(), unicode(file.baseName()), "ogr")
+            QgsMapLayerRegistry.instance().addMapLayers([nl])
 
 
     def cntr2bugs(self):

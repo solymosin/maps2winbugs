@@ -79,30 +79,25 @@ class Dialog(QDialog, Ui_SPlusImport):
         if splusfile=="" or output=="":
             return
 
-        srs = QgsCoordinateReferenceSystem()
-
-        # self.setWindowTitle(srs)
+        srs = QgsCoordinateReferenceSystem('4326')
 
         map = QFile(splusfile)
-        map.open(QIODevice.ReadOnly)
+        bool = map.open(QIODevice.ReadOnly)
         stream = QTextStream(map)
         sep = ":"
-        # labs = QStringList()
-        line = stream.readLine()
+
+        line = str(stream.readLine())
         slen = 0
         featnum = int(line.strip().replace(' ', '').split(sep)[1])
 
         sep = '\t'
 
         for i in range(0, featnum):
-            line = stream.readLine()
+            line = str(stream.readLine())
             chunk = line.strip().replace(' ', '').split(sep)[1]
             if slen<len(chunk):
                 slen = len(chunk)
 
-        # fields = QgsFieldMap()
-        fld = QgsField("id", QVariant.String, "String", slen, 0, "")
-        # fields.insert(fields.count(), fld)
         id = ''
         feats = ''
         idLst = []
@@ -111,33 +106,77 @@ class Dialog(QDialog, Ui_SPlusImport):
         p2 = QgsPoint()
         pi = 0
 
-        line = stream.readLine()
-        self.setWindowTitle(line)
-        # while not stream.atEnd():
-        #     line = stream.readLine()
-        #     self.setWindowTitle(line)
-            # lst = line.strip().replace(' ', '').split(sep)
-            # if len(lst)==3:
-            #     if line!="NA\tNA\tNA":
-            #         if pi==0:
-            #             p1.setX(float(lst[1]))
-            #             p1.setY(float(lst[2]))
-            #         feats+= '%s %s' % (float(lst[1]), float(lst[2]))
-            #         id = lst[0]
-            #         pi+=1
-            #     elif line=="NA\tNA\tNA":
-            #         p2.setX(float(lst[1]))
-            #         p2.setY(float(lst[2]))
-            #         if p1!=p2:
-            #             feats+= '%s %s' % (p1.x(), p1.y())
-            #         idLst.append(id)
-            #         qs = feats[:-2]
-            #         featLst.append(qs)
-            #         pi = 0
+        while not stream.atEnd():
+            line = str(stream.readLine())
+            lst = line.strip().replace(' ', '').split(sep)
+            if len(lst)==3:
+                if line!="NA\tNA\tNA":
+                    if pi==0:
+                        p1.setX(float(lst[1]))
+                        p1.setY(float(lst[2]))
+                    feats+= '%s %s, ' % (float(lst[1]), float(lst[2]))
+                    id = lst[0]
+                    pi+=1
+                    p2.setX(float(lst[1]))
+                    p2.setY(float(lst[2]))
+                elif line=="NA\tNA\tNA":
+                    if p1!=p2:
+                        feats+= '%s %s, ' % (p1.x(), p1.y())
+                    idLst.append(id)
+                    qs = feats[:-2]
+                    featLst.append(qs)
+                    feats = ''
+                    pi = 0
 
-                    # self.setWindowTitle(qs)
+        prev = ''
+        id = ''
+        idGrouped = []
+        n = 1
+        for i in range(0, len(idLst)):
+            if idLst[i]==prev:
+                id+=', %s' % (i)
+            else:
+                idGrouped.append(id)
+                id = '%s' % (i)
+                if i==(len(idLst)-1):
+                    idGrouped.append(id)
+                n+=1
+            prev = idLst[i]
 
+        fields = QgsFields()
+        fields.append(QgsField('id', QVariant.Int, '', 10, 0))
+        wrt = QgsVectorFileWriter(output, self.enc, fields, QGis.WKBPolygon, srs)
 
+        sep = ","
 
+        for i in range(0, featnum):
+            ii = i+1
+            wkt = ''
+            sor = idGrouped[ii]
+            sorlst = sor.strip().replace(' ', '').split(sep)
+            chunk = ''
+            if len(sorlst)==1:
+                az = int(sorlst[0])
+                chunk = featLst[az]
+                wkt = 'POLYGON((%s))' % (chunk)
+            elif len(sorlst)==2:
+                for j in range(0, len(sorlst)):
+                    az = int(sorlst[j])
+                    chunk+= "%s), (" % featLst[az]
+                wkt = "POLYGON((%s))" % chunk[:-4]
+            elif len(sorlst)>2:
+                for j in range(0, len(sorlst)):
+                    az = int(sorlst[j])
+                    chunk+= "%s), (" % featLst[az]
+                wkt = "MULTIPOLYGON(((%s)))" % chunk[:-4]
+            geom = QgsGeometry(QgsGeometry.fromWkt(wkt))
+            feat = QgsFeature()
+            feat.setFields(fields)
+            feat.setGeometry(geom)
+            feat['id'] = ii
+            wrt.addFeature(feat)
 
+        del wrt
+
+        QDialog.accept(self)
 
