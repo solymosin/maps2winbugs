@@ -186,9 +186,6 @@ class maps2WinBUGS:
         dlg.setModal(True)
         dlg.setWindowTitle('Import S-Plus map')
 
-        dlg.lineEdit.setText('/home/sn/Desktop/Belgium.txt')
-        dlg.lineEdit_2.setText('/home/sn/Desktop/be.shp')
-
         if dlg.exec_() == QDialog.Accepted:
             file = QFileInfo(dlg.lineEdit_2.text())
             nl = QgsVectorLayer(dlg.lineEdit_2.text(), unicode(file.baseName()), "ogr")

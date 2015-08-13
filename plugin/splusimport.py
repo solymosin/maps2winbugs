@@ -59,6 +59,7 @@ class Dialog(QDialog, Ui_SPlusImport):
         oFD.setFileMode(QFileDialog.AnyFile)
         oFD.setAcceptMode(QFileDialog.AcceptSave)
         oFD.setConfirmOverwrite(True)
+        self.enc = oFD.encoding()
 
         if oFD.exec_()==QDialog.Accepted:
             files = oFD.selectedFiles()
@@ -73,6 +74,8 @@ class Dialog(QDialog, Ui_SPlusImport):
 
 
     def accept(self):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
         splusfile = self.lineEdit.text()
         output = self.lineEdit_2.text()
 
@@ -180,3 +183,4 @@ class Dialog(QDialog, Ui_SPlusImport):
 
         QDialog.accept(self)
 
+        QApplication.restoreOverrideCursor()
