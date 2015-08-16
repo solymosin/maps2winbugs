@@ -259,6 +259,7 @@ class maps2WinBUGS:
         dlg.plainTextEdit.appendPlainText(u'maps2WinBUGS ' + self.vers +'\n')
         dlg.plainTextEdit.appendPlainText(u"Developed by\n\tSolymosi Norbert\n\tsolymosi.norbert@gmail.com\n")
         dlg.plainTextEdit.appendPlainText(u"Contributors:\n\tWagner, Sara E. \n\tAllepuz, Alberto\n\tMaróti-Agóts Ákos")
+        dlg.plainTextEdit.appendPlainText(u"\n\nSolymosi, N., Wagner, S. E., Maróti-Agóts, Á., & Allepuz, A., 2010. maps2WinBUGS: a QGIS plugin to facilitate data processing for Bayesian spatial modeling. Ecography, 33(6):1093–1096. doi: 10.1111/j.1600-0587.2010.06598.x")
         dlg.plainTextEdit.appendPlainText(u"\n\nIcons came from www.flaticon.com")
         dlg.exec_()
 
