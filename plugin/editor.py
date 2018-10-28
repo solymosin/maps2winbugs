@@ -20,11 +20,12 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import SIGNAL, Qt, QFile, QIODevice, QTextStream, QObject, QModelIndex
-from PyQt4.QtGui import QDialog, QProgressDialog, QFileDialog, QMessageBox, QApplication, QTextCursor, QStandardItemModel, QAbstractItemView, QItemSelectionModel
-from qgis.core import QGis, QgsVectorLayer, QgsFeature, QgsGeometry, QgsVectorDataProvider, QgsFields, QgsField, QgsFeatureRequest, QgsPoint
+from qgis.PyQt.QtCore import Qt, QFile, QIODevice, QTextStream, QObject, QModelIndex, QItemSelectionModel
+from qgis.PyQt.QtWidgets import QDialog, QProgressDialog, QFileDialog, QMessageBox, QApplication, QAbstractItemView
+from qgis.PyQt.QtGui import QStandardItemModel, QTextCursor
+from qgis.core import Qgis, QgsVectorLayer, QgsFeature, QgsGeometry, QgsVectorDataProvider, QgsFields, QgsField, QgsFeatureRequest, QgsPoint
 
-from editor_dialog import Ui_editor_dialog
+from .editor_dialog import Ui_editor_dialog
 
 
 class Dialog(QDialog, Ui_editor_dialog):         
@@ -41,7 +42,7 @@ class Dialog(QDialog, Ui_editor_dialog):
         self.pushSave.clicked.connect(self.save)
         
     def save(self):
-        fileName = QFileDialog.getSaveFileName(self, caption='Save As...')
+        fileName, _ = QFileDialog.getSaveFileName(self, caption='Save As...')
         try:
             file = QFile(fileName + '.txt')
             file.open( QIODevice.WriteOnly | QIODevice.Text )

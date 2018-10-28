@@ -20,11 +20,12 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import SIGNAL, Qt, QFile, QIODevice, QTextStream
-from PyQt4.QtGui import QDialog, QFileDialog, QMessageBox, QApplication, QTextCursor
+from qgis.PyQt.QtCore import Qt, QFile, QIODevice, QTextStream
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox, QApplication
+from qgis.PyQt.QtGui import QTextCursor
 from qgis.core import QgsFeature, QgsGeometry, QgsFeatureRequest
 
-from exp2BUGS_dialog import Ui_exp2BUGS_dialog
+from .exp2BUGS_dialog import Ui_exp2BUGS_dialog
 
 
 class Dialog(QDialog, Ui_exp2BUGS_dialog):
@@ -63,12 +64,12 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
         feat = QgsFeature()
         provider = self.ml.dataProvider()
         feats = provider.getFeatures()
-        self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, self.polynum))
+        #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+        #self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, self.polynum))
         ne = 0
         while feats.nextFeature(feat):
             ne += 1
-            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
+            #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
             geom = QgsGeometry(feat.geometry())
             if geom.isMultipart():
                 multi_polygon = geom.asMultiPolygon()
@@ -138,7 +139,7 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
         QApplication.restoreOverrideCursor()
 
     def save(self):
-        fileName = QFileDialog.getSaveFileName(self, caption='Save As...')
+        fileName, _ = QFileDialog.getSaveFileName(self, caption='Save As...')
         try:
             file = QFile(fileName + '.txt')
             file.open(QIODevice.WriteOnly | QIODevice.Text)

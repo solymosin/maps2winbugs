@@ -21,9 +21,9 @@
 """
 
 
-from PyQt4.QtGui import QDialog
+from qgis.PyQt.QtWidgets import QDialog
 
-from xdist_dialog import Ui_xDist
+from .xdist_dialog import Ui_xDist
 
 
 class Dialog(QDialog, Ui_xDist):         

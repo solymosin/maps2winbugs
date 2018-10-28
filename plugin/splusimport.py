@@ -21,11 +21,12 @@
 """
 
 from qgis.core import *
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
 from qgis.gui import *
 
-from splusimport_dialog import Ui_SPlusImport
+from .splusimport_dialog import Ui_SPlusImport
 
 
 class Dialog(QDialog, Ui_SPlusImport):
@@ -43,14 +44,17 @@ class Dialog(QDialog, Ui_SPlusImport):
         self.settings = QSettings()
         self.enc = self.settings.value('/Processing/encoding', 'System')
 
-        self.connect(self.buttonBox, SIGNAL('rejected()'), self.reject)
-        self.connect(self.buttonBox, SIGNAL('accepted()'), self.accept)
+        #self.connect(self.buttonBox, SIGNAL('rejected()'), self.reject)
+        #self.connect(self.buttonBox, SIGNAL('accepted()'), self.accept)
+        #self.rejected.connect(self.reject)
+        #self.accepted.connect(self.accept)
+
         self.toolButton.clicked.connect(self.fileSource)
         self.toolButton_3.clicked.connect(self.fileDest)
 
 
     def fileSource(self):
-        splusfile = QFileDialog.getOpenFileName(self, 'Open file', QDir.currentPath(), "S-plus file (*.map *.txt)")
+        splusfile, _ = QFileDialog.getOpenFileName(self, 'Open file', QDir.currentPath(), "S-plus file (*.map *.txt)")
         self.lineEdit.setText(splusfile)
 
 
@@ -58,7 +62,8 @@ class Dialog(QDialog, Ui_SPlusImport):
         oFD = QgsEncodingFileDialog(self, self.tr("Save As"), QDir.currentPath(), "Shape files (*.shp)", self.enc)
         oFD.setFileMode(QFileDialog.AnyFile)
         oFD.setAcceptMode(QFileDialog.AcceptSave)
-        oFD.setConfirmOverwrite(True)
+
+        #oFD.setConfirmOverwrite(True)
         self.enc = oFD.encoding()
 
         if oFD.exec_()==QDialog.Accepted:
@@ -148,7 +153,7 @@ class Dialog(QDialog, Ui_SPlusImport):
 
         fields = QgsFields()
         fields.append(QgsField('id', QVariant.Int, '', 10, 0))
-        wrt = QgsVectorFileWriter(output, self.enc, fields, QGis.WKBPolygon, srs)
+        wrt = QgsVectorFileWriter(output, self.enc, fields, QgsWkbTypes.Polygon, srs, "ESRI Shapefile")
 
         sep = ","
 

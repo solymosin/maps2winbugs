@@ -20,10 +20,10 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtGui import QDialog
 
+from qgis.PyQt.QtWidgets import QDialog
 
-from xabout_dialog import Ui_Dialog
+from .xabout_dialog import Ui_Dialog
 
 
 class Dialog(QDialog, Ui_Dialog):         

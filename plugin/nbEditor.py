@@ -20,14 +20,15 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import SIGNAL, Qt, QModelIndex
-from PyQt4.QtGui import QDialog, QApplication, QStandardItemModel, QAbstractItemView, QItemSelectionModel
-from qgis.core import QGis, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsVectorLayerCache
+from qgis.PyQt.QtCore import Qt, QModelIndex, QItemSelectionModel
+from qgis.PyQt.QtWidgets import QDialog, QApplication, QAbstractItemView
+from qgis.PyQt.QtGui import QStandardItemModel
+from qgis.core import Qgis, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsVectorLayerCache, QgsWkbTypes
 from qgis.gui import QgsRubberBand
 
-from nbEditor_dialog import Ui_nbEditor_dialog
-import editor
-import xdist
+from .nbEditor_dialog import Ui_nbEditor_dialog
+from .editor import Dialog as editordlg
+from .xdist import *
 
 class Dialog(QDialog, Ui_nbEditor_dialog):         
     def __init__(self, iface, ml, mc):
@@ -44,7 +45,7 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         self.ml = ml
         self.mCanvas = mc         
         self.mRubberBand = QgsRubberBand(self.mCanvas, True)
-        self.mRubberBand.reset(QGis.Polygon)
+        self.mRubberBand.reset(QgsWkbTypes.PolygonGeometry)
         self.mRubberBand.setColor(Qt.red)
         self.mRubberBand.setWidth(2)
         self.ids = []
@@ -83,7 +84,7 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         idx = self.tableView.selectionModel().selectedIndexes()[0]
         ts = str(self.model.itemData(idx)[0])
         
-        for fid in sorted(self.ml.selectedFeaturesIds()):
+        for fid in sorted(self.ml.selectedFeatureIds()):
             s += '%s,' % str(int(fid)+self.p)                   
  
         s = s[:-1]
@@ -158,13 +159,13 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         feat = QgsFeature()
         provider = self.ml.dataProvider()
         feats = provider.getFeatures()
-        self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
+        #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+        #self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount()))
         ne = 0              
         neighbours = ""
         while feats.nextFeature(feat):
             ne += 1
-            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
+            #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
             geomb = QgsGeometry(feat.geometry())            
             if feata.id()!=feat.id():
                 if geoma.distance(geomb)<=lDist:
@@ -215,7 +216,7 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
 
         
     def convert(self):
-        dlg = editor.Dialog()
+        dlg = editordlg()
         dlg.setModal(True)
         dlg.setWindowTitle("Neighbour list in BUGS format")
         num = ""
@@ -251,13 +252,13 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
 
         provider = self.ml.dataProvider()
         feats = provider.getFeatures()
-        self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, n))
+        #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+        #self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, n))
         ne = 0
         feat = QgsFeature()
         while feats.nextFeature(feat):
             ne += 1
-            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
+            #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
             self.ids.append(feat.id())
 
         if self.comboBox.currentText()=="Touches":            
@@ -303,13 +304,13 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         feat = QgsFeature()
         provider = self.ml.dataProvider()
         feats = provider.getFeatures()
-        self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
+        #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+        #self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount()))
         ne = 0              
         neighbours = ""
         while feats.nextFeature(feat):
             ne += 1
-            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
+            #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
             geomb = QgsGeometry(feat.geometry())
             if feata.id()!=feat.id():
                 if geoma.touches(geomb)==True:
@@ -342,13 +343,13 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         feat = QgsFeature()
         provider = self.ml.dataProvider()
         feats = provider.getFeatures()
-        self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount())) 
+        #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+        #self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount()))
         ne = 0              
         neighbours = ""
         while feats.nextFeature(feat):
             ne += 1
-            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)                       
+            #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
             geomb = QgsGeometry(feat.geometry())
             if feata.id()!=feat.id():
                 if geoma.intersects(geomb)==True:

@@ -20,19 +20,20 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import SIGNAL, Qt, QSettings, QCoreApplication, QFile, QFileInfo
-from qgis.core import QgsMapLayerRegistry, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsPoint, QgsVectorLayer, QgsCoordinateReferenceSystem
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.QtCore import Qt, QSettings, QCoreApplication, QFile, QFileInfo
+from qgis.core import QgsProject, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsPoint, QgsVectorLayer, QgsCoordinateReferenceSystem
 
-from plugin import exp2BUGS
-from plugin import nbEditor
-from plugin import xabout
-from plugin import attr2BUGS
-from plugin import editor
-from plugin import splusimport
+from .plugin import exp2BUGS
+from .plugin import nbEditor
+from .plugin import xabout
+from .plugin import attr2BUGS
+from .plugin import editor
+from .plugin import splusimport
 
 
-import resources_rc
+from .resources_rc import *
 import os.path
 
 class maps2WinBUGS:
@@ -57,13 +58,13 @@ class maps2WinBUGS:
             self.plugin_dir,
             'i18n',
             'maps2winbugs_{}.qm'.format(locale))
-        self.vers = '2.25'
+        self.vers = '2.27'
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
             self.translator.load(locale_path)
 
-            if qVersion() > '4.3.3':
+            if qVersion() > '5.0.0':
                 QCoreApplication.installTranslator(self.translator)
 
 
@@ -156,7 +157,7 @@ class maps2WinBUGS:
        
     
     def  checklayer(self):
-        if QgsMapLayerRegistry.instance().count()==0:
+        if QgsProject.instance().count()==0:
             QMessageBox.warning(self.iface.mainWindow(), 
                                                     "Warning", 
                                                     "Please add a vector layer.", 
@@ -189,7 +190,7 @@ class maps2WinBUGS:
         if dlg.exec_() == QDialog.Accepted:
             file = QFileInfo(dlg.lineEdit_2.text())
             nl = QgsVectorLayer(dlg.lineEdit_2.text(), unicode(file.baseName()), "ogr")
-            QgsMapLayerRegistry.instance().addMapLayers([nl])
+            QgsProject.instance().addMapLayers([nl])
 
 
     def cntr2bugs(self):
@@ -209,13 +210,13 @@ class maps2WinBUGS:
             y = "y = c("
 
             feats = provider.getFeatures()
-            dlg.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-            dlg.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, e))
+            #dlg.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+            #dlg.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, e))
             ne = 0
             feat = QgsFeature()
             while feats.nextFeature(feat):
                 ne += 1
-                dlg.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
+             #   dlg.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
                 ids.append(feat.id())
 
             mod = min(ids)
@@ -259,8 +260,8 @@ class maps2WinBUGS:
         dlg.plainTextEdit.appendPlainText(u'maps2WinBUGS ' + self.vers +'\n')
         dlg.plainTextEdit.appendPlainText(u"Developed by\n\tSolymosi Norbert\n\tsolymosi.norbert@gmail.com\n")
         dlg.plainTextEdit.appendPlainText(u"Contributors:\n\tWagner, Sara E. \n\tAllepuz, Alberto\n\tMaróti-Agóts Ákos")
-        dlg.plainTextEdit.appendPlainText(u"\n\nSolymosi, N., Wagner, S. E., Maróti-Agóts, Á., & Allepuz, A., 2010. maps2WinBUGS: a QGIS plugin to facilitate data processing for Bayesian spatial modeling. Ecography, 33(6):1093–1096. doi: 10.1111/j.1600-0587.2010.06598.x")
-        dlg.plainTextEdit.appendPlainText(u"\n\nIcons came from www.flaticon.com")
+        dlg.plainTextEdit.appendPlainText(u"\nSolymosi, N., Wagner, S. E., Maróti-Agóts, Á., & Allepuz, A., 2010. maps2WinBUGS: a QGIS plugin to facilitate data processing for Bayesian spatial modeling. Ecography, 33(6):1093–1096. doi: 10.1111/j.1600-0587.2010.06598.x")
+        dlg.plainTextEdit.appendPlainText(u"\nIcons came from www.flaticon.com")
         dlg.exec_()
 
 

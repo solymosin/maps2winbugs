@@ -20,11 +20,12 @@
  ***************************************************************************/
 """
 
-from PyQt4.QtCore import SIGNAL, Qt, QFile, QIODevice, QTextStream
-from PyQt4.QtGui import QDialog, QFileDialog, QApplication, QStandardItem, QStandardItemModel
+from qgis.PyQt.QtCore import Qt, QFile, QIODevice, QTextStream
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QApplication
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
 from qgis.core import QgsFeature, QgsFeatureRequest
 
-from attr2BUGS_dialog import Ui_attr2BUGS
+from .attr2BUGS_dialog import Ui_attr2BUGS
 
 
 class Dialog(QDialog, Ui_attr2BUGS):
@@ -109,16 +110,16 @@ class Dialog(QDialog, Ui_attr2BUGS):
         feat = QgsFeature()
         provider = self.ml.dataProvider()
         feats = provider.getFeatures()
-        self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, self.polynum))
+        #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
+        #self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, self.polynum))
         ne = 0
         while feats.nextFeature(feat):
             ne += 1
-            self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
+            #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
             self.ids.append(feat.id())
 
     def save(self):
-        fileName = QFileDialog.getSaveFileName(self, caption='Save As...')
+        fileName, _ = QFileDialog.getSaveFileName(self, caption='Save As...')
         try:
             file = QFile(fileName + '.txt')
             file.open(QIODevice.WriteOnly | QIODevice.Text)
