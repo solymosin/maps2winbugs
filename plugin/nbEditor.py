@@ -58,7 +58,7 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         
         self.comboBox.currentIndexChanged.connect(self.nbMethod)         
         self.ml.selectionChanged.connect(self.map2tab)
-        
+
         
     def ini(self, n):
         self.model = QStandardItemModel(n, 1)
