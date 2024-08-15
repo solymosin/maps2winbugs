@@ -22,7 +22,7 @@
 
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.QtCore import Qt, QSettings, QCoreApplication, QFile, QFileInfo
+from qgis.PyQt.QtCore import Qt, QSettings, QCoreApplication, QFile, QFileInfo, QTranslator
 from qgis.core import QgsProject, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsPoint, QgsVectorLayer, QgsCoordinateReferenceSystem
 
 from .plugin import exp2BUGS
@@ -58,15 +58,23 @@ class maps2WinBUGS:
             self.plugin_dir,
             'i18n',
             'maps2winbugs_{}.qm'.format(locale))
-        self.vers = '2.27'
+        self.vers = '3.0.0'
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
             self.translator.load(locale_path)
+            QCoreApplication.installTranslator(self.translator)
+        
+        # if os.path.exists(locale_path):
+        #     self.translator = QTranslator()
+        #     self.translator.load(locale_path)
 
-            if qVersion() > '5.0.0':
-                QCoreApplication.installTranslator(self.translator)
-
+        #     if qVersion() > '5.0.0':
+        #         QCoreApplication.installTranslator(self.translator)
+        
+        self.actions = []
+        self.menu = self.tr(u'&maps2WinBUGS')
+        self.first_start = None
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -122,14 +130,14 @@ class maps2WinBUGS:
         self.iface.addPluginToMenu('&maps2WinBUGS', self.actNEIGH)
         self.actNEIGH.triggered.connect(self.Neighbouring)
 
-        self.actSPLUS = QAction(
-            QIcon(':/plugins/maps2WinBUGS/images/icon06.png'),
-            QCoreApplication.translate(
-                'maps2winbugs',
-                'Import S-Plus map'),
-            self.iface.mainWindow())
-        self.iface.addPluginToMenu('&maps2WinBUGS', self.actSPLUS)
-        self.actSPLUS.triggered.connect(self.importSplus)
+        # self.actSPLUS = QAction(
+        #     QIcon(':/plugins/maps2WinBUGS/images/icon06.png'),
+        #     QCoreApplication.translate(
+        #         'maps2winbugs',
+        #         'Import S-Plus map'),
+        #     self.iface.mainWindow())
+        # self.iface.addPluginToMenu('&maps2WinBUGS', self.actSPLUS)
+        # self.actSPLUS.triggered.connect(self.importSplus)
             
         self.actAbout = QAction(
             QIcon(':/plugins/maps2WinBUGS/images/icon04.png'),
@@ -210,13 +218,10 @@ class maps2WinBUGS:
             y = "y = c("
 
             feats = provider.getFeatures()
-            #dlg.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-            #dlg.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, e))
             ne = 0
             feat = QgsFeature()
             while feats.nextFeature(feat):
                 ne += 1
-             #   dlg.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
                 ids.append(feat.id())
 
             mod = min(ids)
@@ -245,7 +250,7 @@ class maps2WinBUGS:
         if mLayer is not None:
             self.nbDialog = nbEditor.Dialog(self.iface, mLayer, self.mCanvas)
             self.nbDialog.show()     
-                
+            
 
     def exp2GeoBUGS(self):
         mLayer = self.checklayer()

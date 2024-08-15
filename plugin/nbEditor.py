@@ -25,10 +25,10 @@ from qgis.PyQt.QtWidgets import QDialog, QApplication, QAbstractItemView
 from qgis.PyQt.QtGui import QStandardItemModel
 from qgis.core import Qgis, QgsFeature, QgsGeometry, QgsFeatureRequest, QgsVectorLayerCache, QgsWkbTypes
 from qgis.gui import QgsRubberBand
-
+from qgis.utils import OverrideCursor
 from .nbEditor_dialog import Ui_nbEditor_dialog
 from .editor import Dialog as editordlg
-from .xdist import *
+from .xdist import Dialog as distdlg
 
 class Dialog(QDialog, Ui_nbEditor_dialog):         
     def __init__(self, iface, ml, mc):
@@ -43,18 +43,19 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         self.setupUi(self)
         
         self.ml = ml
-        self.mCanvas = mc         
-        self.mRubberBand = QgsRubberBand(self.mCanvas, True)
-        self.mRubberBand.reset(QgsWkbTypes.PolygonGeometry)
-        self.mRubberBand.setColor(Qt.red)
-        self.mRubberBand.setWidth(2)
+        # self.mCanvas = mc         
+        # self.mRubberBand = QgsRubberBand(self.mCanvas, True)
+        # self.mRubberBand.reset(QgsWkbTypes.PolygonGeometry)
+        # self.mRubberBand.setColor(Qt.red)
+        # self.mRubberBand.setWidth(2)
         self.ids = []
         
         self.ini(0)
         
         self.pushCancel.clicked.connect(self.close)
         self.pushOK.clicked.connect(self.convert)
-        self.comboBox.addItems(['','Intersections','Touches','Within distance']) 
+        self.comboBox.addItems(['','Intersections','Touches']) 
+        # self.comboBox.addItems(['','Intersections','Touches','Within distance']) 
         
         self.comboBox.currentIndexChanged.connect(self.nbMethod)         
         self.ml.selectionChanged.connect(self.map2tab)
@@ -121,12 +122,11 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
                 for e in eLst:
                     res += '%s,' % e
                 res = res[:-1]                 
-                               
             self.model.setData(self.model.index(row, 0, QModelIndex()), res)
                    
                 
     def nbWithinDist(self):
-        dlg = xdist.Dialog()
+        dlg = distdlg() # xdist.Dialog()
         dlg.setModal(True)
         dlg.setWindowTitle("Between two objects")
                 
@@ -159,13 +159,10 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         feat = QgsFeature()
         provider = self.ml.dataProvider()
         feats = provider.getFeatures()
-        #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        #self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount()))
         ne = 0              
         neighbours = ""
         while feats.nextFeature(feat):
             ne += 1
-            #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
             geomb = QgsGeometry(feat.geometry())            
             if feata.id()!=feat.id():
                 if geoma.distance(geomb)<=lDist:
@@ -174,46 +171,39 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
     
     
     def tab2map(self):        
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        
-        self.ml.selectionChanged.disconnect(self.map2tab)
-        
-        idx = self.tableView.selectionModel().selectedIndexes()[0]
-        featureId = idx.row() + self.p
-        
-        s = self.model.itemData(idx)
-        lst = s[0].strip().replace(' ', '').split(',')
-        
-        self.ml.removeSelection()
-        
-        for sid in lst:
-            self.ml.select(int(sid)-self.p)
-              
-        provider = self.ml.dataProvider()        
-        
-        feat = QgsFeature()
-        layer = QgsVectorLayerCache(self.ml, provider.featureCount())
-        layer.featureAtId(idx.row()+self.mod, feat)
-        geom = QgsGeometry(feat.geometry())   
-        
-        self.mRubberBand.setToGeometry(geom, self.ml)
-        self.mRubberBand.show()
-        
-        self.ml.selectionChanged.connect(self.map2tab)
-        
-        QApplication.restoreOverrideCursor()        
-        
+        with OverrideCursor(Qt.WaitCursor):        
+            self.ml.selectionChanged.disconnect(self.map2tab)
+            
+            idx = self.tableView.selectionModel().selectedIndexes()[0]
+            featureId = idx.row() + self.p
+            
+            s = self.model.itemData(idx)
+            lst = s[0].strip().replace(' ', '').split(',')
+            
+            self.ml.removeSelection()
+            
+            for sid in lst:
+                self.ml.select(int(sid)-self.p)
+                
+            provider = self.ml.dataProvider()        
+            
+            feat = QgsFeature()
+            layer = QgsVectorLayerCache(self.ml, provider.featureCount())
+            layer.featureAtId(idx.row()+self.mod, feat)
+            geom = QgsGeometry(feat.geometry())   
+            
+            # self.mRubberBand.setToGeometry(geom, self.ml)
+            # self.mRubberBand.show()
+            
+            self.ml.selectionChanged.connect(self.map2tab)
+                
         
     def closeEvent(self,event):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        self.ml.selectionChanged.disconnect(self.map2tab)
-        self.ml.removeSelection()
-        self.mRubberBand.hide()
-        self.close()
-
-        QApplication.restoreOverrideCursor()
-
+        with OverrideCursor(Qt.WaitCursor):
+            self.ml.selectionChanged.disconnect(self.map2tab)
+            self.ml.removeSelection()
+            # self.mRubberBand.hide()
+            self.close()
         
     def convert(self):
         dlg = editordlg()
@@ -235,82 +225,66 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
         adj = adj[:-2]
         
         nblist = 'list(\nnum = c(%s),\nadj = c(%s),\nsumNumNeigh=%s)' % (num, adj, sumNumNeigh)
-        dlg.plainTextEdit.appendPlainText(nblist)
+        # dlg.plainTextEdit.appendPlainText(nblist)
         
         dlg.exec_()                
 
 
     def nbMethod(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        with OverrideCursor(Qt.WaitCursor):
+            self.ml.selectionChanged.disconnect(self.map2tab)
+            self.model.removeRows(0, self.model.rowCount(QModelIndex()), QModelIndex())
+            n = self.ml.dataProvider().featureCount()
+            self.ini(n)
 
-        self.ml.selectionChanged.disconnect(self.map2tab)
-        self.model.removeRows(0, self.model.rowCount(QModelIndex()), QModelIndex())
-        n = self.ml.dataProvider().featureCount()
-        self.ini(n)
+            self.ids = []
 
-        self.ids = []
+            provider = self.ml.dataProvider()
+            feats = provider.getFeatures()
+            ne = 0
+            feat = QgsFeature()
+            while feats.nextFeature(feat):
+                ne += 1
+                self.ids.append(feat.id())                
 
-        provider = self.ml.dataProvider()
-        feats = provider.getFeatures()
-        #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        #self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, n))
-        ne = 0
-        feat = QgsFeature()
-        while feats.nextFeature(feat):
-            ne += 1
-            #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
-            self.ids.append(feat.id())
+            if self.comboBox.currentText()=="Touches":            
+                if self.ml.geometryType()==0:
+                    return
+                else:
+                    self.nbTouches()                    
 
-        if self.comboBox.currentText()=="Touches":            
-            if self.ml.geometryType()==0:
-                return
-            else:
-                self.nbTouches()
-        if self.comboBox.currentText()=="Intersections":
-            if self.ml.geometryType()==0:
-                return
-            else:
-                self.nbIntersects()
-        if self.comboBox.currentText()=="Within distance":
-            self.nbWithinDist()
+            if self.comboBox.currentText()=="Intersections":
+                if self.ml.geometryType()==0:
+                    return
+                else:
+                    self.nbIntersects()
+            # if self.comboBox.currentText()=="Within distance":
+            #     self.nbWithinDist()
 
-        self.ml.selectionChanged.connect(self.map2tab)
-
-        QApplication.restoreOverrideCursor()
+            # self.ml.selectionChanged.connect(self.map2tab)
         
             
     def nbTouches(self):                                
-        feat = QgsFeature()
-        provider = self.ml.dataProvider()
-        e = provider.featureCount()
-
         self.settings()
-
-        for ne in range(self.mod, e + self.mod):
-            feat = QgsFeature()
-            geom = QgsGeometry()
-            fiter = self.ml.getFeatures(QgsFeatureRequest(ne))
-            if fiter.nextFeature(feat):
-                geom = QgsGeometry(feat.geometry())
-
-            neighbours = self.htouch(feat)
-            row = feat.id()-self.mod    
+        n = 0
+        self.progressBar.setMaximum(self.ml.featureCount()-1)
+        for fa in self.ml.getFeatures():
+            neighbours = self.htouch(fa)
+            # self.plainTextEdit.appendPlainText('Row %s: %s' % (fa.id(), neighbours))
+            row = fa.id()-1    
             self.model.setData(self.model.index(row, 0, QModelIndex()), neighbours)
-            self.progressBar.setValue(100*ne/e)
-
+            self.progressBar.setValue(n)
+            n += 1
          
     def htouch(self, feata):
         geoma = QgsGeometry(feata.geometry()) 
         feat = QgsFeature()
         provider = self.ml.dataProvider()
         feats = provider.getFeatures()
-        #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        #self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount()))
         ne = 0              
         neighbours = ""
         while feats.nextFeature(feat):
-            ne += 1
-            #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
+            ne += 1            
             geomb = QgsGeometry(feat.geometry())
             if feata.id()!=feat.id():
                 if geoma.touches(geomb)==True:
@@ -319,37 +293,26 @@ class Dialog(QDialog, Ui_nbEditor_dialog):
 
     
     def nbIntersects(self):
-        feat = QgsFeature()
-        provider = self.ml.dataProvider()
-        e = provider.featureCount()
-
         self.settings()
-
-        for ne in range(self.mod, e + self.mod):
-            feat = QgsFeature()
-            geom = QgsGeometry()
-            fiter = self.ml.getFeatures(QgsFeatureRequest(ne))
-            if fiter.nextFeature(feat):
-                geom = QgsGeometry(feat.geometry())
-
-            neighbours = self.hintersect(feat)
-            row = feat.id()-self.mod
+        n = 0
+        self.progressBar.setMaximum(self.ml.featureCount()-1)
+        for fa in self.ml.getFeatures():
+            neighbours = self.hintersect(fa)
+            # self.plainTextEdit.appendPlainText('Row %s: %s' % (fa.id(), neighbours))
+            row = fa.id()-1    
             self.model.setData(self.model.index(row, 0, QModelIndex()), neighbours)
-            self.progressBar.setValue(100*ne/e)
-
+            self.progressBar.setValue(n)
+            n += 1
 
     def hintersect(self, feata):
         geoma = QgsGeometry(feata.geometry())  
         feat = QgsFeature()
         provider = self.ml.dataProvider()
         feats = provider.getFeatures()
-        #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        #self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, provider.featureCount()))
         ne = 0              
         neighbours = ""
         while feats.nextFeature(feat):
             ne += 1
-            #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
             geomb = QgsGeometry(feat.geometry())
             if feata.id()!=feat.id():
                 if geoma.intersects(geomb)==True:

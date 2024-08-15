@@ -24,7 +24,7 @@ from qgis.PyQt.QtCore import Qt, QFile, QIODevice, QTextStream
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QApplication
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
 from qgis.core import QgsFeature, QgsFeatureRequest
-
+from qgis.utils import OverrideCursor
 from .attr2BUGS_dialog import Ui_attr2BUGS
 
 
@@ -65,57 +65,51 @@ class Dialog(QDialog, Ui_attr2BUGS):
         self.pushButton_3.clicked.connect(self.save)
 
 
-    def konv(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+    def konv(self):        
+        with OverrideCursor(Qt.WaitCursor):
+            self.plainTextEdit.clear()
 
-        self.plainTextEdit.clear()
+            mod = min(self.ids)
 
-        mod = min(self.ids)
+            provider = self.ml.dataProvider()
+            fields = provider.fields()
+            lst = '#data\nlist('
 
-        provider = self.ml.dataProvider()
-        fields = provider.fields()
-        lst = '#data\nlist('
-
-        for row in range(0, self.model.rowCount()):
-            it = self.model.itemFromIndex(self.model.index(row, 0))
-            if it.checkState()==2:
-                fld = str(self.model.itemData(self.model.index(row, 0))[0])
-                var = fld + '=c('
-                ft = fields[row].type()
-                if ft==10:
-                    for ne in range(mod, self.polynum + mod):
-                        feat = QgsFeature()
-                        fiter = self.ml.getFeatures(QgsFeatureRequest(ne))
-                        if fiter.nextFeature(feat):
-                            u = feat.attribute(fld)
-                            var += "'%s'," % u
-                    var = var[:-2] + "')"
-                else:
-                    for ne in range(mod, self.polynum + mod):
-                        feat = QgsFeature()
-                        fiter = self.ml.getFeatures(QgsFeatureRequest(ne))
-                        if fiter.nextFeature(feat):
-                            u = feat.attribute(fld)
-                            var += "%s," % u
-                    var = var[:-1] + ')'
-                lst += var + ', '
-        lst += ')'
-        lst = lst.replace('), )', '))')
-        self.plainTextEdit.appendPlainText(lst)
-
-        QApplication.restoreOverrideCursor()
+            for row in range(0, self.model.rowCount()):
+                it = self.model.itemFromIndex(self.model.index(row, 0))
+                if it.checkState()==2:
+                    fld = str(self.model.itemData(self.model.index(row, 0))[0])
+                    var = fld + '=c('
+                    ft = fields[row].type()
+                    if ft==10:
+                        for ne in range(mod, self.polynum + mod):
+                            feat = QgsFeature()
+                            fiter = self.ml.getFeatures(QgsFeatureRequest(ne))
+                            if fiter.nextFeature(feat):
+                                u = feat.attribute(fld)
+                                var += "'%s'," % u
+                        var = var[:-2] + "')"
+                    else:
+                        for ne in range(mod, self.polynum + mod):
+                            feat = QgsFeature()
+                            fiter = self.ml.getFeatures(QgsFeatureRequest(ne))
+                            if fiter.nextFeature(feat):
+                                u = feat.attribute(fld)
+                                var += "%s," % u
+                        var = var[:-1] + ')'
+                    lst += var + ', '
+            lst += ')'
+            lst = lst.replace('), )', '))')
+            self.plainTextEdit.appendPlainText(lst)
 
 
     def control(self):
         feat = QgsFeature()
         provider = self.ml.dataProvider()
         feats = provider.getFeatures()
-        #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        #self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, self.polynum))
         ne = 0
         while feats.nextFeature(feat):
             ne += 1
-            #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
             self.ids.append(feat.id())
 
     def save(self):

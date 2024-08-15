@@ -24,7 +24,7 @@ from qgis.PyQt.QtCore import Qt, QFile, QIODevice, QTextStream
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox, QApplication
 from qgis.PyQt.QtGui import QTextCursor
 from qgis.core import QgsFeature, QgsGeometry, QgsFeatureRequest
-
+from qgis.utils import OverrideCursor
 from .exp2BUGS_dialog import Ui_exp2BUGS_dialog
 
 
@@ -64,12 +64,10 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
         feat = QgsFeature()
         provider = self.ml.dataProvider()
         feats = provider.getFeatures()
-        #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), 0)
-        #self.emit(SIGNAL("runRange(PyQt_PyObject)"), (0, self.polynum))
+
         ne = 0
         while feats.nextFeature(feat):
             ne += 1
-            #self.emit(SIGNAL("runStatus(PyQt_PyObject)"), ne)
             geom = QgsGeometry(feat.geometry())
             if geom.isMultipart():
                 multi_polygon = geom.asMultiPolygon()
@@ -106,37 +104,37 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
             self.mind += 1
 
     def formatSelect(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        with OverrideCursor(Qt.WaitCursor):
+            self.plainTextEdit.clear()
+            # self.plainTextEdit.appendPlainText('map\n\n')
+            self.control()
 
-        self.plainTextEdit.clear()
-        self.control()
+            dh = 0
+            prec = (11 - self.intlen) - self.minull
+            scale = 0
 
-        dh = 0
-        prec = (11 - self.intlen) - self.minull
-        scale = 0
+            if (float(self.kicsi) / float(self.mind)) > 0.7:
+                prec = 0
 
-        if (float(self.kicsi) / float(self.mind)) > 0.7:
-            prec = 0
+            if self.comboBox.currentText() == '':
+                return
+            elif self.comboBox.currentText() == 'ArcInfo':
+                self.convArcInfo(prec)
+            elif self.comboBox.currentText() == 'S-Plus':
+                self.convSplus(prec)
 
-        if self.comboBox.currentText() == '':
-            return
-        elif self.comboBox.currentText() == 'ArcInfo':
-            self.convArcInfo(prec)
-        elif self.comboBox.currentText() == 'S-Plus':
-            self.convSplus(prec)
+            self.plainTextEdit.moveCursor(QTextCursor.Start, QTextCursor.MoveAnchor)
 
-        self.plainTextEdit.moveCursor(QTextCursor.Start, QTextCursor.MoveAnchor)
+            if prec <= 3:
+                scale = pow(10, (prec - 1))
+            if prec >= 4:
+                scale = pow(10, 4)
+            if (float(self.kicsi) / float(self.mind)) > 0.7:
+                scale = pow(10, 0)
 
-        if prec <= 3:
-            scale = pow(10, (prec - 1))
-        if prec >= 4:
-            scale = pow(10, 4)
-        if (float(self.kicsi) / float(self.mind)) > 0.7:
-            scale = pow(10, 0)
+            self.plainTextEdit.insertPlainText('map:%s\n\nXscale:%s\nYscale:%s\n\n' % (self.polynum, scale, scale))
 
-        self.plainTextEdit.insertPlainText('map:%s\n\nXscale:%s\nYscale:%s\n\n' % (self.polynum, scale, scale))
 
-        QApplication.restoreOverrideCursor()
 
     def save(self):
         fileName, _ = QFileDialog.getSaveFileName(self, caption='Save As...')
@@ -190,6 +188,7 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
 
         self.plainTextEdit.appendPlainText("END")
 
+        self.progressBar.setMaximum(self.polynum-1)
         n = 1
         for ne in range(mod, self.polynum + mod):
            pn = 1
@@ -228,7 +227,7 @@ class Dialog(QDialog, Ui_exp2BUGS_dialog):
                                            "Polygon No. %s contains to many points to read into GeoBUGS.\nSimplifying of polygon can solve this problem." % (id),
                                            buttons=QMessageBox.Ok, defaultButton=QMessageBox.NoButton)
 
-           self.progressBar.setValue(100*id/self.polynum)
+           self.progressBar.setValue(id)
         self.plainTextEdit.appendPlainText("END")
 
 

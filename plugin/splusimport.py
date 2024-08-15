@@ -25,6 +25,7 @@ from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.gui import *
+from qgis.utils import OverrideCursor
 
 from .splusimport_dialog import Ui_SPlusImport
 
@@ -79,113 +80,110 @@ class Dialog(QDialog, Ui_SPlusImport):
 
 
     def accept(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        with OverrideCursor(Qt.WaitCursor):
+            splusfile = self.lineEdit.text()
+            output = self.lineEdit_2.text()
 
-        splusfile = self.lineEdit.text()
-        output = self.lineEdit_2.text()
+            if splusfile=="" or output=="":
+                return
 
-        if splusfile=="" or output=="":
-            return
+            srs = QgsCoordinateReferenceSystem('4326')
 
-        srs = QgsCoordinateReferenceSystem('4326')
+            map = QFile(splusfile)
+            bool = map.open(QIODevice.ReadOnly)
+            stream = QTextStream(map)
+            sep = ":"
 
-        map = QFile(splusfile)
-        bool = map.open(QIODevice.ReadOnly)
-        stream = QTextStream(map)
-        sep = ":"
-
-        line = str(stream.readLine())
-        slen = 0
-        featnum = int(line.strip().replace(' ', '').split(sep)[1])
-
-        sep = '\t'
-
-        for i in range(0, featnum):
             line = str(stream.readLine())
-            chunk = line.strip().replace(' ', '').split(sep)[1]
-            if slen<len(chunk):
-                slen = len(chunk)
+            slen = 0
+            featnum = int(line.strip().replace(' ', '').split(sep)[1])
 
-        id = ''
-        feats = ''
-        idLst = []
-        featLst = []
-        p1 = QgsPoint()
-        p2 = QgsPoint()
-        pi = 0
+            sep = '\t'
 
-        while not stream.atEnd():
-            line = str(stream.readLine())
-            lst = line.strip().replace(' ', '').split(sep)
-            if len(lst)==3:
-                if line!="NA\tNA\tNA":
-                    if pi==0:
-                        p1.setX(float(lst[1]))
-                        p1.setY(float(lst[2]))
-                    feats+= '%s %s, ' % (float(lst[1]), float(lst[2]))
-                    id = lst[0]
-                    pi+=1
-                    p2.setX(float(lst[1]))
-                    p2.setY(float(lst[2]))
-                elif line=="NA\tNA\tNA":
-                    if p1!=p2:
-                        feats+= '%s %s, ' % (p1.x(), p1.y())
-                    idLst.append(id)
-                    qs = feats[:-2]
-                    featLst.append(qs)
-                    feats = ''
-                    pi = 0
+            for i in range(0, featnum):
+                line = str(stream.readLine())
+                chunk = line.strip().replace(' ', '').split(sep)[1]
+                if slen<len(chunk):
+                    slen = len(chunk)
 
-        prev = ''
-        id = ''
-        idGrouped = []
-        n = 1
-        for i in range(0, len(idLst)):
-            if idLst[i]==prev:
-                id+=', %s' % (i)
-            else:
-                idGrouped.append(id)
-                id = '%s' % (i)
-                if i==(len(idLst)-1):
+            id = ''
+            feats = ''
+            idLst = []
+            featLst = []
+            p1 = QgsPoint()
+            p2 = QgsPoint()
+            pi = 0
+
+            while not stream.atEnd():
+                line = str(stream.readLine())
+                lst = line.strip().replace(' ', '').split(sep)
+                if len(lst)==3:
+                    if line!="NA\tNA\tNA":
+                        if pi==0:
+                            p1.setX(float(lst[1]))
+                            p1.setY(float(lst[2]))
+                        feats+= '%s %s, ' % (float(lst[1]), float(lst[2]))
+                        id = lst[0]
+                        pi+=1
+                        p2.setX(float(lst[1]))
+                        p2.setY(float(lst[2]))
+                    elif line=="NA\tNA\tNA":
+                        if p1!=p2:
+                            feats+= '%s %s, ' % (p1.x(), p1.y())
+                        idLst.append(id)
+                        qs = feats[:-2]
+                        featLst.append(qs)
+                        feats = ''
+                        pi = 0
+
+            prev = ''
+            id = ''
+            idGrouped = []
+            n = 1
+            for i in range(0, len(idLst)):
+                if idLst[i]==prev:
+                    id+=', %s' % (i)
+                else:
                     idGrouped.append(id)
-                n+=1
-            prev = idLst[i]
+                    id = '%s' % (i)
+                    if i==(len(idLst)-1):
+                        idGrouped.append(id)
+                    n+=1
+                prev = idLst[i]
 
-        fields = QgsFields()
-        fields.append(QgsField('id', QVariant.Int, '', 10, 0))
-        wrt = QgsVectorFileWriter(output, self.enc, fields, QgsWkbTypes.Polygon, srs, "ESRI Shapefile")
+            fields = QgsFields()
+            fields.append(QgsField('id', QVariant.Int, '', 10, 0))
+            wrt = QgsVectorFileWriter(output, self.enc, fields, QgsWkbTypes.Polygon, srs, "ESRI Shapefile")
 
-        sep = ","
+            sep = ","
 
-        for i in range(0, featnum):
-            ii = i+1
-            wkt = ''
-            sor = idGrouped[ii]
-            sorlst = sor.strip().replace(' ', '').split(sep)
-            chunk = ''
-            if len(sorlst)==1:
-                az = int(sorlst[0])
-                chunk = featLst[az]
-                wkt = 'POLYGON((%s))' % (chunk)
-            elif len(sorlst)==2:
-                for j in range(0, len(sorlst)):
-                    az = int(sorlst[j])
-                    chunk+= "%s), (" % featLst[az]
-                wkt = "POLYGON((%s))" % chunk[:-4]
-            elif len(sorlst)>2:
-                for j in range(0, len(sorlst)):
-                    az = int(sorlst[j])
-                    chunk+= "%s), (" % featLst[az]
-                wkt = "MULTIPOLYGON(((%s)))" % chunk[:-4]
-            geom = QgsGeometry(QgsGeometry.fromWkt(wkt))
-            feat = QgsFeature()
-            feat.setFields(fields)
-            feat.setGeometry(geom)
-            feat['id'] = ii
-            wrt.addFeature(feat)
+            for i in range(0, featnum):
+                ii = i+1
+                wkt = ''
+                sor = idGrouped[ii]
+                sorlst = sor.strip().replace(' ', '').split(sep)
+                chunk = ''
+                if len(sorlst)==1:
+                    az = int(sorlst[0])
+                    chunk = featLst[az]
+                    wkt = 'POLYGON((%s))' % (chunk)
+                elif len(sorlst)==2:
+                    for j in range(0, len(sorlst)):
+                        az = int(sorlst[j])
+                        chunk+= "%s), (" % featLst[az]
+                    wkt = "POLYGON((%s))" % chunk[:-4]
+                elif len(sorlst)>2:
+                    for j in range(0, len(sorlst)):
+                        az = int(sorlst[j])
+                        chunk+= "%s), (" % featLst[az]
+                    wkt = "MULTIPOLYGON(((%s)))" % chunk[:-4]
+                geom = QgsGeometry(QgsGeometry.fromWkt(wkt))
+                feat = QgsFeature()
+                feat.setFields(fields)
+                feat.setGeometry(geom)
+                feat['id'] = ii
+                wrt.addFeature(feat)
 
-        del wrt
+            del wrt
 
-        QDialog.accept(self)
-
-        QApplication.restoreOverrideCursor()
+            QDialog.accept(self)
